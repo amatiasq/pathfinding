@@ -1,9 +1,7 @@
 import Grid, { INode } from "./grid";
 import Point = Phaser.Point;
 import Sprite = Phaser.Sprite;
-
-
-const DIAGONAL_COST = 1.4;
+import { DIAGONAL_MOVEMENT_COST } from "../constants";
 
 
 export default class Pathfinding<T extends INode> {
@@ -55,7 +53,7 @@ export default class Pathfinding<T extends INode> {
       return Pathfinding.retrace(this.start, this.end);
 
     this.neighbours = this.grid.getNeighbours(this.current);
-    console.log(`current x:${this.current.gridPosition.x} y:${this.current.gridPosition.y} neighbors:${this.neighbours.length}`);
+    // console.log(`current x:${this.current.gridPosition.x} y:${this.current.gridPosition.y} neighbors:${this.neighbours.length}`);
     this.neighbourIndex = 0;
 
     while (this.neighbours)
@@ -64,7 +62,7 @@ export default class Pathfinding<T extends INode> {
 
   private processNeighbour() {
     const neighbour = this.neighbours[ this.neighbourIndex++ ];
-    console.log(`processsing x:${neighbour.gridPosition.x} y:${neighbour.gridPosition.y}`);
+    // console.log(`processsing x:${neighbour.gridPosition.x} y:${neighbour.gridPosition.y}`);
 
     if (this.neighbourIndex >= this.neighbours.length)
       this.neighbours = null;
@@ -98,8 +96,8 @@ export default class Pathfinding<T extends INode> {
     const y = Math.abs(nodeA.gridPosition.y - nodeB.gridPosition.y);
 
     return x > y ?
-      DIAGONAL_COST * 10 * y + 10 * (x - y) :
-      DIAGONAL_COST * 10 * x + 10 * (y - x);
+      DIAGONAL_MOVEMENT_COST * 10 * y + 10 * (x - y) :
+      DIAGONAL_MOVEMENT_COST * 10 * x + 10 * (y - x);
   }
 
   private static retrace<U extends INode>(start: U, end: U) {
