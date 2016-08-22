@@ -42,7 +42,7 @@ export default class Cell extends Sprite implements INode {
 
   update() {
     super.update();
-    this.text.text = `${this.fCost}\n${this.gCost}+${this.hCost}`;
+    this.text.text = `${this}\n${this.fCost}\n${this.gCost}+${this.hCost}`;
   }
 
   toString() {

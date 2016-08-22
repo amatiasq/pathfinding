@@ -7,12 +7,12 @@ export default class Grid<T extends INode> {
 
   constructor(public cols: number, public rows: number) {}
 
-  fill(creator: (row: number, col: number) => T) {
+  fill(creator: (col: number, row: number) => T) {
     this.data = [];
 
-    for (let i = 0; i < this.rows; i++) {
+    for (let i = 0; i < this.cols; i++) {
       this.data[ i ] = [];
-      for (let j = 0; j < this.cols; j++)
+      for (let j = 0; j < this.rows; j++)
         this.data[ i ][ j ] = creator(i, j);
     }
   }
@@ -23,13 +23,14 @@ export default class Grid<T extends INode> {
   }
 
   forEach(iterator: (cell: T, x: number, y: number, grid: Grid<T>) => void) {
-    for (let i = 0; i < this.rows; i++)
-      for (let j = 0; j < this.cols; j++)
+    for (let i = 0; i < this.cols; i++)
+      for (let j = 0; j < this.rows; j++)
         iterator(this.data[i][j], i, j, this);
   }
 
   getNodeFromPoint(point: Point) {
     const coords = point.clone().divide(CELL_SIZE, CELL_SIZE).floor();
+    console.log('POINT ${point}, ${coords}')
     return this.getCell(coords.x, coords.y);
   }
 

@@ -55,7 +55,7 @@ export default class Pathfinding<T extends INode> {
       return Pathfinding.retrace(this.start, this.end);
 
     this.neighbours = this.grid.getNeighbours(this.current);
-    // console.log(`current x:${this.current.gridPosition.x} y:${this.current.gridPosition.y} neighbors:${this.neighbours.length}`);
+    console.log(`current x:${this.current.gridPosition.x} y:${this.current.gridPosition.y} neighbors:${this.neighbours.length}`);
     this.neighbourIndex = 0;
 
     while (this.neighbours)
@@ -64,7 +64,7 @@ export default class Pathfinding<T extends INode> {
 
   private processNeighbour() {
     const neighbour = this.neighbours[ this.neighbourIndex++ ];
-    // console.log(`processsing x:${neighbour.gridPosition.x} y:${neighbour.gridPosition.y}`);
+    console.log(`processsing x:${neighbour.gridPosition.x} y:${neighbour.gridPosition.y}`);
 
     if (this.neighbourIndex >= this.neighbours.length)
       this.neighbours = null;
@@ -91,47 +91,6 @@ export default class Pathfinding<T extends INode> {
   private setOpen(node: T) {
     this.open.push(node);
     (<Sprite><any>node).tint = 0x00FF00;
-  }
-
-
-  static findPath<U extends INode>(grid: Grid<U>, startPoint: Point, endPoint: Point): U[] {
-    const start = grid.getNodeFromPoint(startPoint);
-    const end = grid.getNodeFromPoint(endPoint);
-    const open = [ start ];
-    const closed: INode[] = [];
-
-    while (open.length) {
-      let best = 0;
-
-      for (let i = 1; i < open.length; i++) {
-        if (open[i].fCost < open[best].fCost || (open[i].fCost === open[best].fCost && open[i].hCost < open[best].hCost))
-          best = i;
-      }
-
-      const current = open.splice(best, 1)[0];
-      closed.push(current);
-
-      if (current === end)
-        return Pathfinding.retrace(start, end);
-
-      const neighbours = grid.getNeighbours(current);
-
-      for (let i = 0; i < neighbours.length; i++) {
-        const neighbour = neighbours[i];
-        if (neighbour.isObstacle || closed.indexOf(neighbour) !== -1)
-          continue;
-
-        const movement = current.gCost + this.getDistance(current, neighbour);
-        if (movement < neighbour.gCost || open.indexOf(neighbour) === -1) {
-          neighbour.gCost = movement;
-          neighbour.hCost = Pathfinding.getDistance(neighbour, end);
-          neighbour.parentNode = current;
-
-          if (open.indexOf(neighbour) === -1)
-            open.push(neighbour);
-        }
-      }
-    }
   }
 
   private static getDistance<U extends INode>(nodeA: U, nodeB: U) {

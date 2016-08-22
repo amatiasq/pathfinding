@@ -3,15 +3,13 @@ import {
   ROWS,
   COLUMNS,
   CELL_SIZE,
+  PAUSE,
 } from '../constants';
 import Grid from "../prefabs/grid";
 import Cell from "../prefabs/cell";
 import Group = Phaser.Group;
 import Pathfinding from "../prefabs/pathfinding";
 import Timer = Phaser.Timer;
-
-
-const PAUSE = 100;
 
 
 export default class GameState extends State {
@@ -34,14 +32,14 @@ export default class GameState extends State {
 
     this.cells = this.add.group();
     this.grid = new Grid<Cell>(COLUMNS, ROWS);
-    this.grid.fill((row: number, col: number) => {
+    this.grid.fill((col: number, row: number) => {
       const cell = new Cell(
         this.game,
-        row * CELL_SIZE,
         col * CELL_SIZE,
+        row * CELL_SIZE,
         cellBitmapdata,
-        row,
         col,
+        row,
         1
       );
       this.cells.add(cell);

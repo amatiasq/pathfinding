@@ -12,7 +12,7 @@ window.addEventListener('load', () => gameStart());
 
 
 function gameStart() {
-  const game = new Game(WORLD_HEIGHT, WORLD_WIDTH, AUTO);
+  const game = new Game(WORLD_WIDTH, WORLD_HEIGHT, AUTO);
   game.state.add('Game', new GameState());
   game.state.start('Game');
   (<any>window).game = game;
