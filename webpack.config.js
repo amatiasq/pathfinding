@@ -4,7 +4,7 @@ module.exports = {
   output: { filename: './dist/built.js' },
 
   resolve: {
-    extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
+    extensions: ['.web.js', '.ts', '.js']
   },
 
   module: {
