@@ -1,72 +1,86 @@
 import { Side } from "../config";
-import { ITile } from "./i-tile";
 import { IPathfindingAlgorithm } from "./i-pathfinding-algorithm";
 import { IArea } from "./i-area";
+import { INode } from "./i-node";
+import Vector from "../core/vector";
 
 
-export default class Cluster {
-  private entrances = [] as ITile[];
-  private paths = new Map<ITile, Map<ITile, ITile[]>>();
+export class Cluster {
+  private entrances: Set<INode>;
+  private paths = new WeakMap<INode, Map<INode, INode[]>>();
 
 
   constructor(
     private readonly world: IArea,
     private readonly algorithm: IPathfindingAlgorithm,
-    public readonly x: number,
-    public readonly y: number,
+    public readonly location: Vector,
     public readonly area: IArea,
   ) {}
 
 
-  processEntrances() {
-    this.entrances = [
+  resolve(start: INode, end: INode): INode[] {
+    if (this.paths.has(start) && this.paths.get(start).has(end))
+      return this.paths.get(start).get(end);
+    return this.algorithm.getPath(start, end, this.area);
+  }
+
+  processEntrances(): INode[] {
+    this.entrances = new Set<INode>([
       ...this.processSideEntrances(Side.NORTH),
       ...this.processSideEntrances(Side.SOUTH),
       ...this.processSideEntrances(Side.EAST),
       ...this.processSideEntrances(Side.WEST),
       // this.processSideEntrances(world, Side.UP);
       // this.processSideEntrances(world, Side.DOWN);
-    ];
+    ]);
 
     this.resolveEntrancesPaths();
+    return this.getEntrances();
   }
 
-  resolveEntrancesPaths() {
-    const paths = this.paths = new Map();
-    let index = 0;
+  private resolveEntrancesPaths(): void {
+    const paths = this.paths = new WeakMap();
 
-    for (const entrance of this.entrances) {
-      for (const other of this.entrances) {
-        if (entrance === other) continue;
-
-        if (!paths.has(entrance))
-          paths.set(entrance, new Map());
-        
-        if (!paths.has(other))
-          paths.set(other, new Map());
-
-        if (paths.has(other) && paths.get(other).has(entrance))
-          continue;
-
-        const path = this.algorithm.calculate(this.area, entrance, other);
-        if (!path) continue;
-
-        paths.get(entrance).set(other, path);
-        paths.get(other).set(entrance, [ ...path ].reverse());
-
-        const color = COLORS[index++ % COLORS.length];
-
-        for (const step of path)
-          if (!step.color)
-            step.color = color;
-      }
-    }
+    for (const entrance of this.entrances)
+      for (const other of this.entrances)
+        if (entrance !== other && (!paths.has(other) || !paths.get(other).has(entrance)))
+          this.addPathsToCache(entrance, other);
   }
 
-  getEntrances() {
+  getEntrances(): INode[] {
     return [ ...this.entrances ];
   }
 
+  getConnections(node: INode): Map<INode, INode[]> {
+    if (!this.paths.has(node))
+      for (const entrance of this.entrances)
+        this.addPathsToCache(node, entrance);
+    
+    return this.paths.get(node);
+  }
+
+  addPathsToCache(start: INode, end: INode) {
+    const paths = this.paths;
+    const path = this.resolve(start, end);
+    if (!path) return;
+
+    if (!paths.has(start))
+      paths.set(start, new Map());
+    
+    if (!paths.has(end))
+      paths.set(end, new Map());
+
+    paths.get(start).set(end, path);
+    paths.get(end).set(start, [ ...path ].reverse());
+
+    /*
+    const color = COLORS[index++ % COLORS.length];
+
+    for (const step of path)
+      if (!step.color)
+        step.color = color;
+    */
+  }
 
   private processSideEntrances(direction: Side) {
     const tiles = this.getSideTiles(direction);
@@ -82,8 +96,8 @@ export default class Cluster {
     return this.reduceEntrances(entrances, direction);
   }
 
-  private reduceEntrances(entrances: ITile[], direction: Side): ITile[] {
-    const result = [] as ITile[];
+  private reduceEntrances(entrances: INode[], direction: Side): INode[] {
+    const result = [] as INode[];
 
     for (const tile of entrances) {
       let neighborsCount = 0;
@@ -94,7 +108,7 @@ export default class Cluster {
       }
 
       if (neighborsCount === 0 || neighborsCount === 1) {
-        tile.color = 'blue';
+        // tile.color = 'blue';
         result.push(tile);
       }
     }
@@ -126,4 +140,4 @@ export default class Cluster {
 }
 
 
-const COLORS = [ 'red', 'green', 'orange', 'gray', 'cyan', 'pink', 'purple' ];
+const COLORS = [ 'green', 'orange', 'gray', 'cyan', 'pink', 'purple' ];

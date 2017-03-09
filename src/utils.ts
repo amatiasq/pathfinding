@@ -1,3 +1,8 @@
+export function round(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+
 export function drawSquare(
   ctx: CanvasRenderingContext2D,
   x: number,

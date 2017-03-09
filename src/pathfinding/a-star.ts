@@ -1,29 +1,42 @@
-import { ITile } from "./i-tile";
 import { IPathfindingAlgorithm } from "./i-pathfinding-algorithm";
 import { IArea } from "./i-area";
+import { INode } from "./i-node";
+import { round } from "../utils";
 
 
-export default class AStar<T extends ITile> implements IPathfindingAlgorithm {
+export default class AStar<T extends INode> implements IPathfindingAlgorithm {
   private pool: AStarNodePool<T>;
 
 
-  constructor(
-    private readonly diagonalMovementCost: number,
-    closerModifier: number,
-  ) {
+  constructor(closerModifier: number) {
     this.pool = new AStarNodePool<T>(closerModifier);
   }
 
 
-  calculate(map: IArea, start: T, end: T): T[] {
+  getCost(start: T, path: T[]): number {
+    let cost = 0;
+    let prev = null;
+
+    for (const step of path) {
+      if (prev)
+        cost += prev.getCostTo(step);
+      prev = step;
+    }
+
+    return round(cost);
+  }
+
+  getPath(start: T, end: T, area: IArea = undefined): T[] {
+  /*
     const before = performance.now();
-    const result = this.calculateInternal(map, start, end);
+    const result = this.getPathInternal(start, end, area);
     const after = performance.now();
     AStar.log(after - before, result && result.length);
     return result;
   }
 
-  private calculateInternal(map: IArea, start: T, end: T): T[] {
+  private getPathInternal(start: T, end: T, area: IArea): T[] {
+  */
     const open = new Set<AStarNode<T>>();
     const closed = new Set<AStarNode<T>>();
 
@@ -33,86 +46,31 @@ export default class AStar<T extends ITile> implements IPathfindingAlgorithm {
     while (open.size) {
       current = this.getNext(open, closed);
 
-      if (current.tile === end)
+      if (current.child === end)
         return this.retrace(start, current);
       
       // if (current.tile.isEmpty && !this.hasRampBelow(current))
       //  continue;
 
-      const neighbors = map
-        .getNeighbors(current.tile)
-        .map(tile => this.pool.getNode(tile as T));
+      for (const [ child, relation ] of current.child.getNeighbors(area)) {
+        const neighbor = this.pool.getNode(child as T);
+        const movement = (current.pathCost || 0) + relation.cost;
 
-      for (const neighbor of neighbors)
-        if (this.parseNeighbor(neighbor, current, start, end, open, closed))
-          open.add(neighbor);
-    }
-  }
+        if (child.isObstacle)
+          throw new Error('No obstacle tiles should make it to A* algorithm');
 
-  *debug(map: IArea, start: T, end: T, {
-    visited = 0x777777,
-    neighbor: neighborColor = 0x0000FF,
-    active = 0xFF00FF,
-  } = {}): IterableIterator<T> {
-    const open = new Set<AStarNode<T>>();
-    const closed = new Set<AStarNode<T>>();
-    let current: AStarNode<T>;
+        if (closed.has(neighbor))
+          continue;
 
-    open.add(this.pool.getNode(start));
-    // this.paint(start, neighborColor);
+        if (movement < neighbor.pathCost || !open.has(neighbor)) {
+          neighbor.pathCost = movement;
+          neighbor.estimatedCost = child.estimateDistanceTo(end);
+          neighbor.parent = current;
 
-    while (open.size) {
-      // if (current)
-      //   this.paint(current, visited);
-
-      current = this.getNext(open, closed);
-      // this.paint(current, active);
-
-      if (current.tile === end)
-        return this.retrace(start, current);
-
-      // if (current.isEmpty && !this.hasRampBelow(current))
-      //   continue;
-
-      const neighbors = map
-        .getNeighbors(current.tile)
-        .map(tile => this.pool.getNode(tile as T));
-
-      for (const neighbor of neighbors) {
-        if (this.parseNeighbor(neighbor, current, start, end, open, closed)) {
-          open.add(neighbor);
-          // this.paint(neighbor, neighborColor);
+          if (!open.has(neighbor))
+            open.add(neighbor);
         }
       }
-
-      yield;
-    }
-  }
-
-
-  /*
-   * Shared code
-   */
-
-  parseNeighbor(
-    neighbor: AStarNode<T>,
-    current: AStarNode<T>,
-    start: T,
-    end: T,
-    open: NodeSet<T>,
-    closed: NodeSet<T>
-  ): boolean {
-
-    if (neighbor.tile.isObstacle || closed.has(neighbor))
-      return false;
-
-    const movement = (current.gCost || 0) + this.getDistance(current.tile, neighbor.tile);
-
-    if (movement < neighbor.gCost || !open.has(neighbor)) {
-      neighbor.gCost = movement;
-      neighbor.hCost = this.getDistance(neighbor.tile, end);
-      neighbor.parent = current;
-      return !open.has(neighbor);
     }
   }
 
@@ -121,22 +79,11 @@ export default class AStar<T extends ITile> implements IPathfindingAlgorithm {
    * Helpers
    */
 
-  getDistance(nodeA: T, nodeB: T): number {
-    const x = Math.abs(nodeA.x - nodeB.x);
-    const y = Math.abs(nodeA.y - nodeB.y);
-
-    const layerMovement = x > y ?
-      this.diagonalMovementCost * 10 * y + 10 * (x - y) :
-      this.diagonalMovementCost * 10 * x + 10 * (y - x);
-
-    return layerMovement; // + z * LAYER_CHANGE_COST;
-  }
-
   getNext(open: NodeSet<T>, closed: NodeSet<T>): AStarNode<T> {
     let best: AStarNode<T> = null;
 
     for (let item of open) {
-      if (!best || (item.fCost < best.fCost || (item.fCost === best.fCost && item.hCost < best.hCost)))
+      if (!best || (item.cost < best.cost || (item.cost === best.cost && item.cost < best.cost)))
         best = item;
     }
 
@@ -149,8 +96,8 @@ export default class AStar<T extends ITile> implements IPathfindingAlgorithm {
     const path = [] as T[];
     let current = end;
 
-    while (current.tile !== start) {
-      path.push(current.tile);
+    while (current.child !== start) {
+      path.push(current.child);
       current = current.parent;
     }
 
@@ -173,31 +120,30 @@ export default class AStar<T extends ITile> implements IPathfindingAlgorithm {
   private static round(value: number) {
     return Math.round(value * 100) / 100;
   }
-
 }
 
 
 class AStarNode<T> {
   public parent: AStarNode<T>;
-  public gCost: number;
-  public hCost: number;
+  public pathCost: number;
+  public estimatedCost: number;
   private _isDisposed = false;
 
 
   constructor(
-    private _tile: T,
+    private _child: T,
     private closerModifier: number,
   ) {}
 
 
-  get tile(): T {
+  get child(): T {
     this.checkDisposed();
-    return this._tile;
+    return this._child;
   }
 
-  get fCost(): number {
+  get cost(): number {
     this.checkDisposed();
-    return this.gCost + this.hCost * this.closerModifier;
+    return this.pathCost + this.estimatedCost * this.closerModifier;
   }
 
   get isDisposed(): boolean {
@@ -210,8 +156,8 @@ class AStarNode<T> {
   }
 
   dispose() {
-    this.gCost = null;
-    this.hCost = null;
+    this.pathCost = null;
+    this.estimatedCost = null;
     this.parent = null;
     this._isDisposed = true;
   }
@@ -263,7 +209,6 @@ class AStarNodePool<T extends object> {
 }
 
 
+
 interface NodeSet<T> extends Set<AStarNode<T>> {}
-
-
 class DisposedInstanceInvocationError extends Error {}

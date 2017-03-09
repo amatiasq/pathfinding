@@ -1,26 +1,21 @@
 import Tile from "./tile";
 import { Side } from "../config";
 import { IArea } from "../pathfinding/i-area";
+import Vector from "../core/vector";
 
 
 export class Area implements IArea {
-  public readonly width: number;
-  public readonly height: number;
-  private readonly offsetX: number;
-  private readonly offsetY: number;
+  public readonly size: Vector;
+  private readonly offset: Vector;
 
 
   constructor(
     private readonly grid: Tile[][],
   ) {
-    this.height = grid.length;
-
     const firstRow = grid[0];
-    this.width = firstRow.length;
-
     const firstTile = grid[0][0];
-    this.offsetX = firstTile.x;
-    this.offsetY = firstTile.y;
+    this.size = new Vector(firstRow.length, grid.length)
+    this.offset = firstTile.location;
   }
 
 
@@ -31,33 +26,33 @@ export class Area implements IArea {
 
   getRow(y: number): Tile[] {
     if (y < 0)
-      y = this.height + y;
+      y = this.size.y + y;
 
     return this.grid[y] || null;
   }
 
   getCol(x: number): Tile[] {
     if (x < 0)
-      x = this.width + x;
+      x = this.size.x + x;
 
-    if (x < 0 || x >= this.width)
+    if (x < 0 || x >= this.size.x)
       return null;
 
     return this.grid.map(row => row[x]);
   }
 
-  getRange(x: number, y: number, width: number, height: number): Area {
+  getRange(point: Vector, size: Vector): Area {
     const result = [] as Tile[][];
 
-    for (let i = 0; i < width; i++) {
-      result[i] = [];
-      const row = this.grid[i + x];
+    for (let j = 0; j < size.y; j++) {
+      result[j] = [];
+      const row = this.grid[j + point.y];
       if (!row) continue;
 
-      for (let j = 0; j < height; j++) {
-        const tile = row[j + y];
+      for (let i = 0; i < size.x; i++) {
+        const tile = row[i + point.x];
         if (!tile) break;
-        result[i][j] = tile;
+        result[j][i] = tile;
       }
     }
 
@@ -65,25 +60,23 @@ export class Area implements IArea {
   }
 
   getNeighbor(tile: Tile, direction: Side): Tile {
-    const x = tile.x - this.offsetX;
-    const y = tile.y - this.offsetY;
+    const index = Vector.diff(tile.location, this.offset);
 
     switch (direction) {
       // case Side.UP:
       // case Side.DOWN:
       case Side.NORTH:      
       case Side.SOUTH:
-        return this.get(x, y + (direction === Side.NORTH ? -1 : +1));
+        return this.get(index.x, index.y + (direction === Side.NORTH ? -1 : +1));
       
       case Side.EAST:
       case Side.WEST:
-        return this.get(x + (direction === Side.WEST ? -1 : +1), y);
+        return this.get(index.x + (direction === Side.WEST ? -1 : +1), index.y);
     }
   }
 
   getNeighbors(tile: Tile): Tile[] {
-    const x = tile.x - this.offsetX;
-    const y = tile.y - this.offsetY;
+    const index = Vector.diff(tile.location, this.offset);
     const result = [];
 
     for (let i = -1; i <= 1; i++) {
@@ -91,7 +84,7 @@ export class Area implements IArea {
         if (i === 0 && j === 0)
           continue;
 
-        const cell = this.get(x + j, y + i);
+        const cell = this.get(index.x + j, index.y + i);
         if (cell)
           result.push(cell);
       }

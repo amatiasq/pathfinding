@@ -1,17 +1,25 @@
 import { IPrintable } from "../interfaces";
-import { drawSquare, fillSquare } from "../utils";
+import { drawSquare, fillSquare, round } from "../utils";
 import { Color } from "../config";
+import { INode, INodeRelation } from "../pathfinding/i-node";
+import { World } from "./world";
+import { SubclassExpectedError } from "../pathfinding/errors";
+import { IArea } from "../pathfinding/i-area";
+import Vector from "../core/vector";
 
 
-export default class Tile implements IPrintable {
-  public color: string;
+export default class Tile implements IPrintable, INode {
+  private world: World;
+  id: string;
+  color: string;
+  content: string;
 
 
   constructor(
-    public readonly x: number,
-    public readonly y: number,
+    public readonly location: Vector,
     public readonly size: number,
     private _travelCost: number,
+    private readonly diagonalMovementCost: number,
   ) {}
 
 
@@ -24,29 +32,86 @@ export default class Tile implements IPrintable {
   }
 
 
-  isNeighbor(other: Tile) {
-    if (this.x === other.x)
-      return Math.abs(this.y - other.y) === 1;
+  setWorld(world: World) {
+    this.world = world;
+  }
 
-    if (this.y === other.y)
-      return Math.abs(this.x - other.x) === 1;
+  getNeighbors(area: IArea = this.world): Map<INode, INodeRelation> {
+    const neighbors = area.getNeighbors(this) as Tile[];
+    const result = new Map<INode, INodeRelation>();
+
+    for (const neighbor of neighbors)
+      if (!neighbor.isObstacle || neighbor === this)
+        result.set(neighbor, { cost: this.isAdjacent(neighbor) ? 1 : this.diagonalMovementCost });
+
+    return result;
+  }
+
+  getCostTo(neighbor: INode): number {
+    const tile = neighbor as Tile;
+
+    if (this.isAdjacent(tile))
+      return 1;
     
-    return false;
+    if (this.isDiagonal(tile))
+      return this.diagonalMovementCost;
+    
+    debugger;
+    throw new Error('Argument should be a neighbor');
+  }
+
+  estimateDistanceTo(tile: Tile): number {
+    const diff = Vector.diff(this.location, tile.location).abs();
+
+    const layerMovement = diff.x > diff.y ?
+      this.diagonalMovementCost * 10 * diff.y + 10 * (diff.x - diff.y) :
+      this.diagonalMovementCost * 10 * diff.x + 10 * (diff.y - diff.x);
+
+    return round(layerMovement); // + z * LAYER_CHANGE_COST;
+  }
+
+  isNeighbor(other: INode): boolean {
+    if (!(other instanceof Tile))
+      throw new SubclassExpectedError(`Expected Tile but ${other.constructor.name} found`);
+
+    return this.isAdjacent(other) || this.isDiagonal(other);
+  }
+
+  isAdjacent(other: Tile) {
+    return Vector.diff(this.location, other.location).magnitude === 1;
+  }
+
+  isDiagonal(other: Tile) {
+    return Vector.diff(this.location, other.location).magnitude === Vector.round(Math.SQRT2);
   }
 
   print(ctx: CanvasRenderingContext2D): void {
-    drawSquare(ctx, this.x * this.size, this.y * this.size, this.size, {
+    const x = this.location.x * this.size;
+    const y = this.location.y * this.size;
+
+    drawSquare(ctx, x, y, this.size, {
       color: Color.TILE.toString(),
     });
 
-    if (this.isObstacle)
-      fillSquare(ctx, this.x * this.size, this.y * this.size, this.size);
+    if (this.isObstacle) {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(x, y, this.size, this.size);
+    }
 
-    if (this.color)
-      fillSquare(ctx, this.x * this.size, this.y * this.size, this.size, { color: this.color });
+    if (this.color) {
+      ctx.fillStyle = this.color;
+      ctx.fillRect(x, y, this.size, this.size);
+    }
+    
+    if (this.content) {
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'black';
+      ctx.fillText(this.content, x + this.size / 2, y + this.size - 2);
+    }
   }
 
   toString() {
-    return `{x:${this.x},y:${this.y}}`;
+    return `[Tile(${this.location.toJSON()})]`;
   }
 }

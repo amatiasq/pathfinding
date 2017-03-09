@@ -1,5 +1,6 @@
 import Tile from "./tile";
 import { Area } from "./area";
+import Vector from "../core/vector";
 
 
 export class World extends Area {
@@ -9,15 +10,19 @@ export class World extends Area {
   constructor(
     data: number[][],
     tileSize: number,
+    diagonalMovementCost: number,
   ) {
     const grid = [] as Tile[][];
 
-    data.forEach((row, i) => {
-      let tiles = grid[i] = [] as Tile[];
-      row.forEach((value, j) => tiles[j] = new Tile(j, i, tileSize, value));
+    data.forEach((row, j) => {
+      let tiles = grid[j] = [] as Tile[];
+      row.forEach((value, i) => {
+        tiles[i] = new Tile(new Vector(i, j), tileSize, value, diagonalMovementCost)
+      });
     });
 
     super(grid);
     this.tileSize = tileSize;
+    this.forEach(tile => tile.setWorld(this));
   }
 }
