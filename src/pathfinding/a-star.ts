@@ -26,7 +26,7 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
     return round(cost);
   }
 
-  getPath(start: T, end: T, area: IArea = undefined): T[] {
+  getPath(start: T, end: T, area?: IArea): T[] {
   /*
     const before = performance.now();
     const result = this.getPathInternal(start, end, area);
@@ -35,7 +35,7 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
     return result;
   }
 
-  private getPathInternal(start: T, end: T, area: IArea): T[] {
+  private getPathInternal(start: T, end: T, area?: IArea): T[] {
   */
     const open = new Set<AStarNode<T>>();
     const closed = new Set<AStarNode<T>>();
@@ -70,8 +70,14 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
           if (!open.has(neighbor))
             open.add(neighbor);
         }
+
+        if (!open.has(neighbor))
+          neighbor.dispose();
       }
     }
+
+    for (const node of closed)
+      node.dispose();
   }
 
 

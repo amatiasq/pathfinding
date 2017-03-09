@@ -12,9 +12,13 @@ const CLUSTER_SIZE = 10;
 const DIAGONAL_MOVEMENT_COST = 1.4;
 const CLOSER_MODIFIER = 2;
 
+
+const before = performance.now();
 const world = new World(MAP_DATA, TILE_SIZE, DIAGONAL_MOVEMENT_COST);
 const aStar = new AStar<Tile>(CLOSER_MODIFIER);
 const pathfinding = new Pathfinding(world, aStar, CLUSTER_SIZE);
+const after = performance.now();
+console.log(`INIT = ${after - before}ms`);
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -36,14 +40,6 @@ const successful = [ world.get(10, 0), world.get(35, 25) ];
 
 
 test({
-  'successful hierarchical': (repetitions: number) => {
-    for (let i = 0; i < repetitions; i++)
-      pathfinding.resolve(successful[0], successful[1]);
-  },
-  'failure hierarchical': (repetitions: number) => {
-    for (let i = 0; i < repetitions; i++)
-      pathfinding.resolve(failure[0], failure[1]);
-  },
   'successful non-hierarchical': (repetitions: number) => {
     for (let i = 0; i < repetitions; i++)
       aStar.getPath(successful[0], successful[1]);
@@ -51,6 +47,14 @@ test({
   'failure non-hierarchical': (repetitions: number) => {
     for (let i = 0; i < repetitions; i++)
       aStar.getPath(failure[0], failure[1]);
+  },
+  'successful hierarchical': (repetitions: number) => {
+    for (let i = 0; i < repetitions; i++)
+      pathfinding.resolve(successful[0], successful[1]);
+  },
+  'failure hierarchical': (repetitions: number) => {
+    for (let i = 0; i < repetitions; i++)
+      pathfinding.resolve(failure[0], failure[1]);
   },
 });
 

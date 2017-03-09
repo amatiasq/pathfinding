@@ -160,8 +160,8 @@ abstract class BaseVector<T extends IVector> implements IVector {
  * If you want mutability you can import { MutableVector } instead
  */
 export default class Vector extends BaseVector<Vector> implements IVector {
-	public static ZERO = new Vector(0, 0);
-	public static MAX = new Vector(Infinity, Infinity);
+  public static ZERO = new Vector(0, 0);
+  public static MAX = new Vector(Infinity, Infinity);
 
   protected set(x: number, y: number): Vector {
     return new Vector(x, y);
