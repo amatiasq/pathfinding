@@ -7,29 +7,31 @@ import Tile from "./world/tile";
 import { Pathfinding } from "./pathfinding/pathfinding";
 
 
-const TILE_SIZE = 15;
-const CLUSTER_SIZE = 10;
+const TILE_SIZE = 10;
+const CLUSTER_SIZE = 4;
 const DIAGONAL_MOVEMENT_COST = 1.4;
 const CLOSER_MODIFIER = 0.2;
 
+let world: World;
+let aStar: AStar<Tile>;
+let pathfinding: Pathfinding;
 
-const before = performance.now();
-const world = new World(MAP_DATA, TILE_SIZE, DIAGONAL_MOVEMENT_COST);
-const aStar = new AStar<Tile>(CLOSER_MODIFIER);
-const pathfinding = new Pathfinding(world, aStar, CLUSTER_SIZE);
-const after = performance.now();
-console.log(`INIT = ${after - before}ms`);
+measure('INIT', () => {
+  world = new World(MAP_DATA, TILE_SIZE, DIAGONAL_MOVEMENT_COST);
+  aStar = new AStar<Tile>(CLOSER_MODIFIER);
+  pathfinding = new Pathfinding(world, aStar, CLUSTER_SIZE);
+});
+
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
-
 canvas.width = document.body.clientWidth;
 canvas.height = document.body.clientHeight;
 ctx.translate(TILE_SIZE, TILE_SIZE);
 
-const failure = [ world.get(15, 0), world.get(45, 15) ];
-const successful = [ world.get(15, 0), world.get(45, 25) ];
+const failure = [ world.get(25, 0), world.get(56, 25) ];
+const successful = [ world.get(25, 0), world.get(56, 35) ];
 samplePath();
-// performanceTest(100);
+// performanceTest(10);
 frame();
 
 
@@ -55,8 +57,9 @@ function frame() {
 function samplePath() {
   const result = pathfinding.resolve(successful[0], successful[1]);
 
-  for (const tile of result.tiles)
-    (tile as Tile).color = 'green';
+  if (result)
+    for (const tile of result.tiles)
+      (tile as Tile).color = 'green';
 }
 
 
@@ -82,13 +85,15 @@ function performanceTest(repetitions: number) {
 
 
   function test(cases: any) {
-    const keys = Object.keys(cases);
-
-    for (const key of keys) {
-      const before = performance.now();
-      cases[key]();
-      const after = performance.now();
-      console.log(`${key} = ${after - before}ms`);
-    }
+    for (const key of Object.keys(cases))
+      measure(key, cases[key]);
   }
+}
+
+
+function measure(message: string, operation: Function) {
+  const before = performance.now();
+  operation();
+  const after = performance.now();
+  console.log(`${message} = ${after - before}ms`);
 }

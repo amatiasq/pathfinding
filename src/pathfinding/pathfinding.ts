@@ -7,9 +7,9 @@ import Vector from "../core/vector";
 
 
 export class Pathfinding {
-  private readonly nodes = [] as Node<INode>[];
+  private readonly nodes = [] as Node[];
   private readonly clusters: Cluster[][];
-  private readonly tempNodes = new WeakMap<INode, TemporalNode<INode>>();
+  private readonly tempNodes = new WeakMap<INode, TemporalNode>();
   public readonly size: Vector;
 
 
@@ -40,9 +40,8 @@ export class Pathfinding {
 
   resolve(start: INode, end: INode) {
     const startCluster = this.getClusterFor(start);
-    const endCluster = this.getClusterFor(end);
 
-    if (startCluster === endCluster) {
+    if (startCluster === this.getClusterFor(end)) {
       return {
         levels: [],
         tiles: startCluster.resolve(start, end),
@@ -51,32 +50,53 @@ export class Pathfinding {
 
     const startNode = this.getTempNodeFor(start);
     const endNode = this.getTempNodeFor(end);
-    const path = this.algorithm.getPath(startNode, endNode) as Node<INode>[];
+    const result = this.resolveInternal(startNode, endNode);
+    startNode.disconnect();
+    endNode.disconnect();
+    return result;
+  }
 
-    if (!path) {
-      startNode.disconnect();
-      endNode.disconnect();
+  private resolveInternal(startNode: TemporalNode, endNode: TemporalNode) {
+    const path = this.algorithm.getPath(startNode, endNode) as Node[];
+    if (!path)
       return null;
-    }
 
-    let tiles = [] as INode[];
-    let prev = startNode as Node<INode>;
+    const tiles = [] as INode[][];
+    let prev = startNode as Node;
 
     for (const step of path) {
-      tiles = [ ...tiles, ...this.getTilesBetween(prev, step) ];
+      const between = this.fixBridges(
+        last(tiles),
+        this.getTilesBetween(prev, step),
+      );
+
+      tiles.push(between);
       prev = step;
     }
 
-    startNode.disconnect();
-    endNode.disconnect();
-
     return {
       levels: [ path ],
-      tiles,
+      tiles: [].concat(...tiles),
     };
   }
 
-  private getTilesBetween(start: Node<INode>, end: Node<INode>): INode[] {
+  private fixBridges(prev: INode[], current: INode[]): INode[] {
+    if (!prev)
+      return current;
+    
+    const lastTile = last(prev);
+    const firstTile = current[0];
+
+    if (lastTile.isNeighbor(firstTile))
+      return current;
+
+    return [
+      ...this.algorithm.getPath(lastTile, current[0]),
+      ...current.slice(1),
+    ];
+  }
+
+  private getTilesBetween(start: Node, end: Node): INode[] {
     const { childA, childB } = start.getRelation(end);
     const isSorted = start.hasChild(childA);
     const startTile = isSorted ? childA : childB;
@@ -114,7 +134,7 @@ export class Pathfinding {
       let message = '';
 
       for (let [ neighbor, relation ] of node.getNeighbors()) {
-        message += `${node.id} - ${(neighbor as Node<INode>).id} = ${relation.cost}\n`;
+        message += `${node.id} - ${(neighbor as Node).id} = ${relation.cost}\n`;
       }
 
       console.log(message);
@@ -126,7 +146,7 @@ export class Pathfinding {
     let node = this.nodes.find(node => node.hasChild(child));
 
     if (!node) {
-      node = new Node<INode>();
+      node = new Node();
       node.addChild(child);
       this.nodes.push(node);
     }
@@ -139,7 +159,7 @@ export class Pathfinding {
       return this.tempNodes.get(child).reconnect();
 
     const cluster = this.getClusterFor(child);
-    const node = new TemporalNode<INode>();
+    const node = new TemporalNode();
     node.addChild(child);
 
     for (const [ connection, path ] of cluster.getConnections(child)) {
@@ -167,4 +187,9 @@ export class Pathfinding {
       for (let cluster of row)
         iterator(cluster, this);
   }
+}
+
+
+function last<T>(list: T[]): T {
+  return list[list.length - 1];
 }

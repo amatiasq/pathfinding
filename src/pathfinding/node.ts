@@ -4,13 +4,13 @@ import { Pathfinding } from "./pathfinding";
 import Vector from "../core/vector";
 
 
-export class Node<T extends INode> implements INode {
+export class Node implements INode {
   private static idCounter = 0;
-  private readonly children = new Set<T>();
-  private readonly neighbors = new Map<INode, INodeRelation>();
+  private readonly children = new Set<INode>();
+  private readonly neighbors = new Map<Node, INodeRelation>();
   private dirty = true;
   private _travelCost: number;
-  private sampleChild: T;
+  private sampleChild: INode;
   id: string;
 
 
@@ -38,7 +38,7 @@ export class Node<T extends INode> implements INode {
   }
 
   
-  addChild(child: T): void {
+  addChild(child: INode): void {
     this.dirty = true;
     this.children.add(child);
     this.sampleChild = child;
@@ -46,7 +46,7 @@ export class Node<T extends INode> implements INode {
     // child.content = this.id;
   }
 
-  hasChild(child: T): boolean {
+  hasChild(child: INode): boolean {
     if (this.children.has(child))
       return true;
     
@@ -60,71 +60,53 @@ export class Node<T extends INode> implements INode {
     return false;
   }
 
-  setNeighbor(node: INode, relation: INodeRelation): void {
+  setNeighbor(node: Node, relation: INodeRelation): void {
     const current = this.neighbors.get(node);
 
     if (!current || current.cost > relation.cost)
       this.neighbors.set(node, relation);
   }
 
-  removeNeighbor(node: INode): void {
+  removeNeighbor(node: Node): void {
     this.neighbors.delete(node);
   }
 
-  getNeighbors(): Map<INode, INodeRelation> {
+  getNeighbors(): Map<Node, INodeRelation> {
     return this.neighbors;
   }
 
-  getRelation(neighbor: INode): INodeRelation {
+  getRelation(neighbor: Node): INodeRelation {
     if (!this.isNeighbor(neighbor))
       throw new Error('Argument should be a neighbor');
     
     return this.neighbors.get(neighbor);
   }
 
-  isNeighbor(node: INode): boolean {
+  isNeighbor(node: Node): boolean {
     return this.neighbors.has(node);
   }
 
-  getCostTo(neighbor: INode): number {
+  getCostTo(neighbor: Node): number {
     return this.getRelation(neighbor).cost;
   }
 
-  estimateDistanceTo(node: INode): number {
-    if (!(node instanceof Node))
-      throw new SubclassExpectedError(`Expected Node but ${node.constructor.name} found`);
-    return this.sampleChild.estimateDistanceTo((node as Node<T>).sampleChild);
-  }
-
-  getClosestChildrenTo(point: Vector): INode {
-    let bestNode = null;
-    let bestDistance = null;
-
-    for (const child of this.children) {
-      const distance = point.diff(child.location).magnitude;
-
-      if (!bestNode || distance < bestDistance) {
-        bestNode = child;
-        bestDistance = distance;
-      }
-    }
-
-    return bestNode;
+  estimateDistanceTo(node: Node): number {
+    return this.sampleChild.estimateDistanceTo(node.sampleChild);
   }
 }
 
 
-export class TemporalNode<T extends INode> extends Node<T> {
+export class TemporalNode extends Node {
   reconnect(): this {
     for (const [ neighbor, relation ] of this.getNeighbors())
-      (neighbor as Node<T>).setNeighbor(this, relation);
+      neighbor.setNeighbor(this, relation);
 
     return this;
   }
 
   disconnect() {
     for (const [ neighbor, relation ] of this.getNeighbors())
-      (neighbor as Node<T>).removeNeighbor(this);
+      neighbor.removeNeighbor(this);
   }
 }
 
