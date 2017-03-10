@@ -109,7 +109,7 @@ export class Cluster {
       }
 
       if (neighborsCount === 0 || neighborsCount === 1) {
-        (tile as any).color = 'blue';
+        // (tile as any).color = 'blue';
         result.push(tile);
       }
     }

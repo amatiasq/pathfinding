@@ -85,13 +85,15 @@ export default class Tile implements IPrintable, INode {
     return Vector.diff(this.location, other.location).magnitude === Vector.round(Math.SQRT2);
   }
 
-  print(ctx: CanvasRenderingContext2D): void {
+  print(ctx: CanvasRenderingContext2D, drawGrid?: boolean): void {
     const x = this.location.x * this.size;
     const y = this.location.y * this.size;
 
-    drawSquare(ctx, x, y, this.size, {
-      color: Color.TILE.toString(),
-    });
+    if (drawGrid) {
+      drawSquare(ctx, x, y, this.size, {
+        color: Color.TILE.toString(),
+      });
+    }
 
     if (this.isObstacle) {
       ctx.fillStyle = 'black';

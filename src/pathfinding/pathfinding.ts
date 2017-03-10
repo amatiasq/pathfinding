@@ -1,6 +1,6 @@
 import { IPathfindingAlgorithm } from "./i-pathfinding-algorithm";
 import { IArea } from "./i-area";
-import { INode } from "./i-node";
+import { INode, ITile } from "./i-node";
 import { Node, TemporalNode } from "./node";
 import { Cluster } from "./cluster";
 import Vector from "../core/vector";
@@ -38,7 +38,10 @@ export class Pathfinding {
   }
 
 
-  resolve(start: INode, end: INode) {
+  resolve(start: ITile, end: ITile) {
+    if (start.isObstacle || end.isObstacle)
+      return null;
+
     const startCluster = this.getClusterFor(start);
 
     if (startCluster === this.getClusterFor(end)) {
@@ -83,7 +86,7 @@ export class Pathfinding {
   private fixBridges(prev: INode[], current: INode[]): INode[] {
     if (!prev)
       return current;
-    
+
     const lastTile = last(prev);
     const firstTile = current[0];
 
