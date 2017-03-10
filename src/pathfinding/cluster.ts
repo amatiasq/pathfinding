@@ -70,6 +70,7 @@ export class Cluster {
     if (!paths.has(end))
       paths.set(end, new Map());
 
+    path.unshift(start);
     paths.get(start).set(end, path);
     paths.get(end).set(start, [ ...path ].reverse());
 

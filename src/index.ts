@@ -10,7 +10,7 @@ import { Pathfinding } from "./pathfinding/pathfinding";
 const TILE_SIZE = 15;
 const CLUSTER_SIZE = 10;
 const DIAGONAL_MOVEMENT_COST = 1.4;
-const CLOSER_MODIFIER = 2;
+const CLOSER_MODIFIER = 0.2;
 
 
 const before = performance.now();
@@ -26,52 +26,10 @@ canvas.width = document.body.clientWidth;
 canvas.height = document.body.clientHeight;
 ctx.translate(TILE_SIZE, TILE_SIZE);
 
-/*
-const result = pathfinding.resolve(world.get(10, 0), world.get(40, 0));
-
-if (result)
-  for (const tile of result.tiles)
-    (tile as Tile).color = 'green';
-*/
-
-
-const failure = [ world.get(10, 0), world.get(35, 0) ];
-const successful = [ world.get(10, 0), world.get(35, 25) ];
-
-
-test({
-  'successful non-hierarchical': (repetitions: number) => {
-    for (let i = 0; i < repetitions; i++)
-      aStar.getPath(successful[0], successful[1]);
-  },
-  'failure non-hierarchical': (repetitions: number) => {
-    for (let i = 0; i < repetitions; i++)
-      aStar.getPath(failure[0], failure[1]);
-  },
-  'successful hierarchical': (repetitions: number) => {
-    for (let i = 0; i < repetitions; i++)
-      pathfinding.resolve(successful[0], successful[1]);
-  },
-  'failure hierarchical': (repetitions: number) => {
-    for (let i = 0; i < repetitions; i++)
-      pathfinding.resolve(failure[0], failure[1]);
-  },
-});
-
-
-function test(cases: any) {
-  const REPETITIONS = 100;
-  const keys = Object.keys(cases);
-
-  for (const key of keys) {
-    const before = performance.now();
-    const result = cases[key](REPETITIONS);
-    const after = performance.now();
-    console.log(`${key} = ${after - before}ms`);
-  }
-}
-
-
+const failure = [ world.get(15, 0), world.get(45, 15) ];
+const successful = [ world.get(15, 0), world.get(45, 25) ];
+samplePath();
+// performanceTest(100);
 frame();
 
 
@@ -91,4 +49,46 @@ function frame() {
   });
 
   // requestAnimationFrame(frame);
+}
+
+
+function samplePath() {
+  const result = pathfinding.resolve(successful[0], successful[1]);
+
+  for (const tile of result.tiles)
+    (tile as Tile).color = 'green';
+}
+
+
+function performanceTest(repetitions: number) {
+  test({
+    'successful non-hierarchical': () => {
+      for (let i = 0; i < repetitions; i++)
+        aStar.getPath(successful[0], successful[1]);
+    },
+    'failure non-hierarchical': () => {
+      for (let i = 0; i < repetitions; i++)
+        aStar.getPath(failure[0], failure[1]);
+    },
+    'successful hierarchical': () => {
+      for (let i = 0; i < repetitions; i++)
+        pathfinding.resolve(successful[0], successful[1]);
+    },
+    'failure hierarchical': () => {
+      for (let i = 0; i < repetitions; i++)
+        pathfinding.resolve(failure[0], failure[1]);
+    },
+  });
+
+
+  function test(cases: any) {
+    const keys = Object.keys(cases);
+
+    for (const key of keys) {
+      const before = performance.now();
+      cases[key]();
+      const after = performance.now();
+      console.log(`${key} = ${after - before}ms`);
+    }
+  }
 }
