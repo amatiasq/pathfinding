@@ -17,6 +17,7 @@ let pathfinding: Pathfinding;
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
 let prevPath: IPrintablePath = null;
+const timeCost = [] as number[];
 
 
 init();
@@ -35,10 +36,16 @@ if (constants.RANDOM_PATH_INTERVAL)
 
 
 function init() {
-  measure('INIT', () => {
-    world = new World(MAP_DATA, constants.TILE_SIZE, constants.DIAGONAL_MOVEMENT_COST);
+  measure(() => {
+    const data = constants.GRID_MULTIPLIER ?
+      multiplyGrid(MAP_DATA, constants.GRID_MULTIPLIER) :
+      MAP_DATA;
+
+    world = new World(data, constants.TILE_SIZE, constants.DIAGONAL_MOVEMENT_COST);
     aStar = new AStar<Tile>(constants.CLOSER_MODIFIER);
     pathfinding = new Pathfinding(world, aStar, constants.CLUSTER_SIZE);
+  }, {
+    message: 'INIT',
   });
 
   canvas = document.querySelector('canvas');
@@ -84,7 +91,12 @@ function randomPath() {
 
 
 function drawPath(from: Tile, to: Tile): IPrintablePath {
-  const result = pathfinding.resolve(from, to) || { tiles: [] as Tile[] };
+  const {
+    duration,
+    result,
+  } = measure(() => pathfinding.resolve(from, to) || { tiles: [] as Tile[] }, {
+    log: false,
+  });
 
   for (const tile of result.tiles)
     tile.color = constants.PATH_COLOR;
@@ -99,6 +111,10 @@ function drawPath(from: Tile, to: Tile): IPrintablePath {
     for (const tile of result.tiles)
       tile.color = null;
   }
+
+  timeCost.push(duration);
+  const average = timeCost.reduce((prev, current) => prev + current) / timeCost.length;
+  console.log('AVERAGE A*', average, result.tiles.length);
     
   return result as IPrintablePath;
 }
@@ -125,7 +141,7 @@ function performanceTest(repetitions: number) {
   };
 
   for (const key of Object.keys(cases))
-    measure(key, cases[key]);
+    measure(cases[key], { message: key });
 }
 
 
@@ -133,15 +149,46 @@ function randomTile() {
   return world.get(random(world.size.x), random(world.size.y))
 }
 
+
 function random(max: number = 1, min: number = 0) {
   return Math.floor(Math.random() * (max - min)) + min
 }
 
-function measure(message: string, operation: Function) {
+
+function measure(operation: Function, {
+  message = 'Operation',
+  log = true,
+} = {}) {
   const before = performance.now();
-  operation();
+  const result = operation();
   const after = performance.now();
-  console.log(`${message} = ${after - before}ms`);
+  const duration = after - before;
+
+  if (log)
+    console.log(`${message} = ${duration}ms`);
+  
+  return { duration, result };
+}
+
+
+function multiplyGrid(grid: number[][], multiplier: number) {
+  if (multiplier === 0) return [];
+  if (multiplier === 1) return grid;
+
+  const result = [] as number[][];
+
+  grid.forEach((row, y) => {
+    for (let i = 0; i < multiplier; i++)
+      result[y * multiplier + i] = [] as number[];
+    
+    row.forEach((value, x) => {
+      for (let i = 0; i < multiplier; i++)
+        for (let j = 0; j < multiplier; j++)
+          result[y * multiplier + i][x * multiplier + j] = value;
+    });
+  });
+
+  return result;
 }
 
 
