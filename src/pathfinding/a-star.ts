@@ -27,6 +27,9 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
   }
 
   getPath(start: T, end: T, area?: IArea): T[] {
+    if (start === end)
+      return [ end ];
+
   /*
     const before = performance.now();
     const result = this.getPathInternal(start, end, area);

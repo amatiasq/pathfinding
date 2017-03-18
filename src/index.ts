@@ -6,6 +6,7 @@ import { World } from "./world/world";
 import Tile from "./world/tile";
 import { Pathfinding } from "./pathfinding/pathfinding";
 import * as constants from "./constants";
+import Vector from "./core/vector";
 
 
 console.log(JSON.stringify(constants, null, '  '));
@@ -32,7 +33,6 @@ frame();
 
 if (constants.RANDOM_PATH_INTERVAL)
   setInterval(randomPath, constants.RANDOM_PATH_INTERVAL)
-
 
 
 function init() {
@@ -85,8 +85,14 @@ function randomPath() {
   if (prevPath)
     prevPath.remove();
   
-  const end = world.get(random(60), random(60));
-  prevPath = drawPath(randomTile(), randomTile())
+  const start = new Vector(random(world.size.x), random(world.size.y));
+  const end = new Vector(random(world.size.x), random(world.size.y));
+  console.log(`drawPath(world.get(${start.x}, ${start.y}), world.get(${end.x}, ${end.y}))`);
+
+  prevPath = drawPath(
+    world.get(start.x, start.y),
+    world.get(end.x, end.y),
+  );
 }
 
 
@@ -112,9 +118,11 @@ function drawPath(from: Tile, to: Tile): IPrintablePath {
       tile.color = null;
   }
 
-  timeCost.push(duration);
-  const average = timeCost.reduce((prev, current) => prev + current) / timeCost.length;
-  console.log('AVERAGE A*', average, result.tiles.length);
+  if (constants.LOG_AVERAGE) {
+    timeCost.push(duration);
+    const average = timeCost.reduce((prev, current) => prev + current) / timeCost.length;
+    console.log('AVERAGE A*', average, result.tiles.length);
+  }
     
   return result as IPrintablePath;
 }
@@ -142,11 +150,6 @@ function performanceTest(repetitions: number) {
 
   for (const key of Object.keys(cases))
     measure(cases[key], { message: key });
-}
-
-
-function randomTile() {
-  return world.get(random(world.size.x), random(world.size.y))
 }
 
 

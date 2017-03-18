@@ -42,8 +42,8 @@ export class Node implements INode {
     this.dirty = true;
     this.children.add(child);
     this.sampleChild = child;
-    // child.color = 'brown';
-    // child.content = this.id;
+    // (child as any).color = 'brown';
+    // (child as any).content = this.id;
   }
 
   hasChild(child: INode): boolean {

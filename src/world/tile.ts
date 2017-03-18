@@ -50,6 +50,9 @@ export default class Tile implements IPrintable, INode {
   getCostTo(neighbor: INode): number {
     const tile = neighbor as Tile;
 
+    if (this === neighbor)
+      return 0;
+
     if (this.isAdjacent(tile))
       return 1;
     

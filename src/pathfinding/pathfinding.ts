@@ -145,8 +145,12 @@ export class Pathfinding {
     */
   }
 
+  private findNode(child: INode) {
+    return this.nodes.find(node => node.hasChild(child));
+  }
+
   private getNodeFor(child: INode) {
-    let node = this.nodes.find(node => node.hasChild(child));
+    let node = this.findNode(child);
 
     if (!node) {
       node = new Node();
@@ -170,6 +174,15 @@ export class Pathfinding {
         cost: this.algorithm.getCost(child, path),
         childA: child,
         childB: connection,
+      });
+    }
+
+    const overlappingNode = this.findNode(child);
+    if (overlappingNode) {
+      node.setNeighbor(overlappingNode, {
+        cost: 0,
+        childA: child,
+        childB: child,
       });
     }
 
