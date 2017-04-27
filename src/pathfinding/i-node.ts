@@ -1,9 +1,9 @@
-import Vector from "../core/vector";
 import { IArea } from "./i-area";
+import Vector3D from "../core/vector3d";
 
 
 export interface INode {
-  readonly location: Vector;
+  readonly location: Vector3D;
   readonly travelCost: number;
   readonly isObstacle: boolean;
   getCostTo(neighbor: INode): number;

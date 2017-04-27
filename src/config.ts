@@ -28,6 +28,6 @@ export enum Side {
   SOUTH,
   EAST,
   WEST,
-  // UP,
-  // DOWN,
+  UP,
+  DOWN,
 }

@@ -1,6 +1,6 @@
 import Tile from "./tile";
 import { Area } from "./area";
-import Vector from "../core/vector";
+import { Vector3D } from "../core";
 
 
 export class World extends Area {
@@ -8,16 +8,20 @@ export class World extends Area {
 
 
   constructor(
-    data: number[][],
+    data: number[][][],
     tileSize: number,
     diagonalMovementCost: number,
+    layerChangeCost: number,
   ) {
-    const grid = [] as Tile[][];
+    const grid = [] as Tile[][][];
 
-    data.forEach((row, j) => {
-      let tiles = grid[j] = [] as Tile[];
-      row.forEach((value, i) => {
-        tiles[i] = new Tile(new Vector(i, j), tileSize, value, diagonalMovementCost)
+    data.forEach((layer, k) => {
+      let rows = grid[k] = [] as Tile[][];
+      layer.forEach((row, j) => {
+        let tiles = rows[j] = [] as Tile[];
+        row.forEach((value, i) => {
+          tiles[i] = new Tile(new Vector3D(i, j, k), tileSize, value, diagonalMovementCost, layerChangeCost)
+        });
       });
     });
 

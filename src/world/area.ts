@@ -1,58 +1,121 @@
 import Tile from "./tile";
 import { Side } from "../config";
 import { IArea } from "../pathfinding/i-area";
-import Vector from "../core/vector";
+import { Vector3D } from "../core";
 
 
 export class Area implements IArea {
-  public readonly size: Vector;
-  private readonly offset: Vector;
+  public readonly size: Vector3D;
+  private readonly offset: Vector3D;
 
 
   constructor(
-    private readonly grid: Tile[][],
+    private readonly grid: Tile[][][],
   ) {
-    const firstRow = grid[0];
-    const firstTile = grid[0][0];
-    this.size = new Vector(firstRow.length, grid.length)
+    const firstLayer = grid[0];
+    const firstRow = firstLayer[0];
+    const firstTile = firstRow[0];
+    this.size = new Vector3D(firstRow.length, firstLayer.length, grid.length);
     this.offset = firstTile.location;
   }
 
 
-  get(x: number, y: number): Tile {
-    const entry = this.grid[y];
-    return entry ? entry[x] : null;
+  get(z: number, x: number, y: number): Tile {
+    const layer = this.grid[z] || [];
+    const row = layer[y];
+    return row ? row[x] : null;
   }
 
-  getRow(y: number): Tile[] {
-    if (y < 0)
-      y = this.size.y + y;
+  /**
+   * Takes two adjacent faces of a cube and returns all tiles at the edge
+   * between the two faces.
+   */
+  getEdge(faceA: Side, faceB: Side): Tile[] {
+    let z = null as number;
+    let x = null as number;
+    let y = null as number;
 
-    return this.grid[y] || null;
+    if (faceA === faceB)
+      throw new Error('faceA and faceB should be different');
+
+    if (faceA === Side.UP || faceB === Side.UP)
+      z = 0;
+    
+    if (faceA === Side.DOWN || faceB === Side.DOWN)
+      z = this.size.z - 1;
+
+    if (faceA === Side.NORTH || faceB === Side.NORTH)
+      y = 0
+    
+    if (faceA === Side.SOUTH || faceB === Side.SOUTH)
+      y = this.size.y - 1;
+    
+    if (faceA === Side.WEST || faceB === Side.WEST)
+      x = 0;
+    
+    if (faceA === Side.EAST || faceB === Side.EAST)
+      x = this.size.x - 1;
+
+    if (x !== null && y !== null)
+      return this.grid.map(layer => layer[y][x])
+
+    if (z !== null && x !== null)
+      return this.grid[z].map(row => row[x]);
+
+    if (z !== null && y !== null)
+      return this.grid[z][y] || null;
+    
+    throw new Error('Invalid Side calculation');
   }
 
-  getCol(x: number): Tile[] {
-    if (x < 0)
-      x = this.size.x + x;
+  getFace(face: Side): Tile[] {
+    if (face == null)
+      throw new Error('Argument can\'t be null');
 
-    if (x < 0 || x >= this.size.x)
-      return null;
+    if (face === Side.UP || face === Side.DOWN) {
+      const z = face === Side.UP ? 0 : this.size.z - 1;
+      return [].concat(...this.grid[z]);
+    }
 
-    return this.grid.map(row => row[x]);
+    // if only one layer .getEdge() is cheapest
+    if (this.size.z === 1)
+      return this.getEdge(Side.UP, face);
+    
+    if (face === Side.NORTH || face === Side.SOUTH) {
+      const y = face === Side.NORTH ? 0 : this.size.y - 1;
+      return [].concat(...this.grid.map(layer => layer[y]));
+    }
+    
+    if (face === Side.WEST || face === Side.EAST) {
+      const x = face === Side.WEST ? 0 : this.size.y - 1;
+      const result = [];
+
+      for (let k = 0; k < this.size.z; k++)
+        for (let j = 0; j < this.size.y; j++)
+          result.push(this.get(k, x, j));
+      
+      return result;
+    }
   }
 
-  getRange(point: Vector, size: Vector): Area {
-    const result = [] as Tile[][];
+  getRange(point: Vector3D, size: Vector3D): Area {
+    const result = [] as Tile[][][];
 
-    for (let j = 0; j < size.y; j++) {
-      result[j] = [];
-      const row = this.grid[j + point.y];
-      if (!row) continue;
+    for (let k = 0; k < size.z; k++) {
+      const layer = this.grid[k + point.z];
+      if (!layer) continue;
+      result[k] = [];
 
-      for (let i = 0; i < size.x; i++) {
-        const tile = row[i + point.x];
-        if (!tile) break;
-        result[j][i] = tile;
+      for (let j = 0; j < size.y; j++) {
+        const row = layer[j + point.y];
+        if (!row) continue;
+        result[k][j] = [];
+
+        for (let i = 0; i < size.x; i++) {
+          const tile = row[i + point.x];
+          if (!tile) break;
+          result[k][j][i] = tile;
+        }
       }
     }
 
@@ -60,23 +123,30 @@ export class Area implements IArea {
   }
 
   getNeighbor(tile: Tile, direction: Side): Tile {
-    const index = Vector.diff(tile.location, this.offset);
+    const index = Vector3D.diff(tile.location, this.offset);
 
     switch (direction) {
-      // case Side.UP:
-      // case Side.DOWN:
+      case Side.UP:
+      case Side.DOWN:
+        const neighbor = this.get(index.z + (direction === Side.UP ? -1 : +1), index.x, index.y);
+        const isValid = neighbor && (
+          (direction === Side.UP && tile.canTravelUp && neighbor.canTravelDown) ||
+          (direction === Side.DOWN && tile.canTravelDown && neighbor.canTravelUp)
+        );
+        return isValid ? neighbor : null;
+
       case Side.NORTH:      
       case Side.SOUTH:
-        return this.get(index.x, index.y + (direction === Side.NORTH ? -1 : +1));
+        return this.get(index.z, index.x, index.y + (direction === Side.NORTH ? -1 : +1));
       
       case Side.EAST:
       case Side.WEST:
-        return this.get(index.x + (direction === Side.WEST ? -1 : +1), index.y);
+        return this.get(index.z, index.x + (direction === Side.WEST ? -1 : +1), index.y);
     }
   }
 
   getNeighbors(tile: Tile): Tile[] {
-    const index = Vector.diff(tile.location, this.offset);
+    const index = Vector3D.diff(tile.location, this.offset);
     const result = [];
 
     for (let i = -1; i <= 1; i++) {
@@ -84,16 +154,32 @@ export class Area implements IArea {
         if (i === 0 && j === 0)
           continue;
 
-        const cell = this.get(index.x + j, index.y + i);
+        const cell = this.get(index.z, index.x + j, index.y + i);
         if (cell)
           result.push(cell);
       }
     }
 
+    if (tile.canTravelUp) {
+      const up = this.get(index.z - 1, index.x, index.y);
+      if (up && up.canTravelDown)
+        result.push(up);
+    }
+
+    if (tile.canTravelDown) {
+      const down = this.get(index.z + 1, index.x, index.y);
+      if (down && down.canTravelUp)
+        result.push(down);
+    }
+
     return result;
   }
 
-  forEach(iterator: (tile: Tile, x: number, y: number, area: Area) => void): void {
-    this.grid.forEach((row, i) => row.forEach((tile, j) => iterator(tile, j, i, this)));
+  forEach(iterator: (tile: Tile, z: number, x: number, y: number, area: Area) => void): void {
+    this.grid.forEach((layer, k) => {
+      layer.forEach((row, i) => {
+        row.forEach((tile, j) => iterator(tile, k, j, i, this))
+      });
+    });
   }
 }

@@ -1,7 +1,9 @@
 import { INode, INodeRelation } from "./i-node";
-import { SubclassExpectedError } from "./errors";
 import { Pathfinding } from "./pathfinding";
-import Vector from "../core/vector";
+import { Vector3D } from "../core";
+
+
+const DEBUG = true;
 
 
 export class Node implements INode {
@@ -15,11 +17,13 @@ export class Node implements INode {
 
 
   constructor() {
-    this.id = `${Node.idCounter++}`;
+    if (DEBUG) {
+      this.id = `${Node.idCounter++}`;
+    }
   }
 
 
-  get location(): Vector {
+  get location(): Vector3D {
     return this.sampleChild ? this.sampleChild.location : null;
   }
 
@@ -42,8 +46,11 @@ export class Node implements INode {
     this.dirty = true;
     this.children.add(child);
     this.sampleChild = child;
-    // (child as any).color = 'brown';
-    // (child as any).content = this.id;
+
+    if (DEBUG) {
+      (child as any).color = 'brown';
+      (child as any).content = this.id;
+    }
   }
 
   hasChild(child: INode): boolean {

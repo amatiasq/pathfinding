@@ -3,9 +3,8 @@ import { drawSquare, fillSquare, round } from "../utils";
 import { Color } from "../config";
 import { INode, INodeRelation } from "../pathfinding/i-node";
 import { World } from "./world";
-import { SubclassExpectedError } from "../pathfinding/errors";
 import { IArea } from "../pathfinding/i-area";
-import Vector from "../core/vector";
+import { Vector3D } from "../core";
 
 
 export default class Tile implements IPrintable, INode {
@@ -16,10 +15,11 @@ export default class Tile implements IPrintable, INode {
 
 
   constructor(
-    public readonly location: Vector,
+    public readonly location: Vector3D,
     public readonly size: number,
     private _travelCost: number,
     private readonly diagonalMovementCost: number,
+    private readonly layerChangeCost: number,
   ) {}
 
 
@@ -29,6 +29,14 @@ export default class Tile implements IPrintable, INode {
 
   get travelCost(): number {
     return this._travelCost;
+  }
+
+  get canTravelUp(): boolean {
+    return !this.isObstacle;
+  }
+
+  get canTravelDown(): boolean {
+    return !this.isObstacle;
   }
 
 
@@ -42,7 +50,7 @@ export default class Tile implements IPrintable, INode {
 
     for (const neighbor of neighbors)
       if (!neighbor.isObstacle || neighbor === this)
-        result.set(neighbor, { cost: this.isAdjacent(neighbor) ? 1 : this.diagonalMovementCost });
+        result.set(neighbor, { cost: this.getCostTo(neighbor) });
 
     return result;
   }
@@ -58,34 +66,54 @@ export default class Tile implements IPrintable, INode {
     
     if (this.isDiagonal(tile))
       return this.diagonalMovementCost;
+
+    if (this.isAboveOrBelow(tile))
+      return this.layerChangeCost;
     
-    debugger;
     throw new Error('Argument should be a neighbor');
   }
 
   estimateDistanceTo(tile: Tile): number {
-    const diff = Vector.diff(this.location, tile.location).abs();
+    const { x, y, z } = Vector3D.diff(this.location, tile.location).abs();
 
-    const layerMovement = diff.x > diff.y ?
-      this.diagonalMovementCost * 10 * diff.y + 10 * (diff.x - diff.y) :
-      this.diagonalMovementCost * 10 * diff.x + 10 * (diff.y - diff.x);
+    const layerMovement = x > y ?
+      this.diagonalMovementCost * 10 * y + 10 * (x - y) :
+      this.diagonalMovementCost * 10 * x + 10 * (y - x);
 
-    return round(layerMovement); // + z * LAYER_CHANGE_COST;
+    return round(layerMovement) + z * this.layerChangeCost;
   }
 
   isNeighbor(other: INode): boolean {
     if (!(other instanceof Tile))
-      throw new SubclassExpectedError(`Expected Tile but ${other.constructor.name} found`);
+      throw new TypeError(`Expected Tile but ${other.constructor.name} found`);
 
     return this.isAdjacent(other) || this.isDiagonal(other);
   }
 
-  isAdjacent(other: Tile) {
-    return Vector.diff(this.location, other.location).magnitude === 1;
+  isSameLayer(other: Tile) {
+    return this.location.z === other.location.z;
   }
 
-  isDiagonal(other: Tile) {
-    return Vector.diff(this.location, other.location).magnitude === Vector.round(Math.SQRT2);
+  isAdjacent(other: Tile): boolean {
+    return (
+      this.isSameLayer(other) &&
+      Vector3D.diff(this.location, other.location).magnitude === 1
+    );
+  }
+
+  isDiagonal(other: Tile): boolean {
+    return (
+      this.isSameLayer(other) &&
+      Vector3D.diff(this.location, other.location).magnitude === Vector3D.round(Math.SQRT2)
+    );
+  }
+
+  isAboveOrBelow(other: Tile): boolean {
+    return (
+      this.location.x === other.location.x &&
+      this.location.y === other.location.y &&
+      Math.abs(this.location.z - other.location.z) === 1
+    );
   }
 
   print(ctx: CanvasRenderingContext2D, drawGrid?: boolean): void {

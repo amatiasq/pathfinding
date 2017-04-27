@@ -2,7 +2,7 @@ import { Side } from "../config";
 import { IPathfindingAlgorithm } from "./i-pathfinding-algorithm";
 import { IArea } from "./i-area";
 import { INode } from "./i-node";
-import Vector from "../core/vector";
+import { Vector3D } from "../core";
 
 
 export class Cluster {
@@ -13,7 +13,7 @@ export class Cluster {
   constructor(
     private readonly world: IArea,
     private readonly algorithm: IPathfindingAlgorithm,
-    public readonly location: Vector,
+    public readonly location: Vector3D,
     public readonly area: IArea,
   ) {}
 
@@ -26,12 +26,12 @@ export class Cluster {
 
   processEntrances(): INode[] {
     this.entrances = new Set<INode>([
-      ...this.processSideEntrances(Side.NORTH),
-      ...this.processSideEntrances(Side.SOUTH),
-      ...this.processSideEntrances(Side.EAST),
-      ...this.processSideEntrances(Side.WEST),
-      // this.processSideEntrances(world, Side.UP);
-      // this.processSideEntrances(world, Side.DOWN);
+      ...this.processFaceEntrances(Side.NORTH),
+      ...this.processFaceEntrances(Side.SOUTH),
+      ...this.processFaceEntrances(Side.EAST),
+      ...this.processFaceEntrances(Side.WEST),
+      ...this.processFaceEntrances(Side.UP),
+      ...this.processFaceEntrances(Side.DOWN),
     ]);
 
     this.resolveEntrancesPaths();
@@ -54,12 +54,16 @@ export class Cluster {
   getConnections(node: INode): Map<INode, INode[]> {
     if (!this.paths.has(node))
       for (const entrance of this.entrances)
-        this.addPathsToCache(node, entrance);
+        if (entrance !== node)
+          this.addPathsToCache(node, entrance);
     
     return this.paths.get(node);
   }
 
   addPathsToCache(start: INode, end: INode) {
+    // TODO: this is a bug
+    if (start === end) debugger;
+
     const paths = this.paths;
     const path = this.resolve(start, end);
     if (!path) return;
@@ -73,18 +77,10 @@ export class Cluster {
     path.unshift(start);
     paths.get(start).set(end, path);
     paths.get(end).set(start, [ ...path ].reverse());
-
-    /*
-    const color = COLORS[index++ % COLORS.length];
-
-    for (const step of path)
-      if (!step.color)
-        step.color = color;
-    */
   }
 
-  private processSideEntrances(direction: Side) {
-    const tiles = this.getSideTiles(direction);
+  private processFaceEntrances(direction: Side) {
+    const tiles = this.area.getFace(direction);
     const entrances = [];
 
     for (const tile of tiles) {
@@ -108,6 +104,7 @@ export class Cluster {
           neighborsCount++;
       }
 
+      // TODO: this probably causes issues since third dimension is added
       if (neighborsCount === 0 || neighborsCount === 1) {
         // (tile as any).color = 'blue';
         result.push(tile);
@@ -116,29 +113,5 @@ export class Cluster {
 
     return result;
   }
-
-  private getSideTiles(direction: Side) {
-    switch (direction) {
-      // case Side.UP:
-      // case Side.DOWN:
-      //   return [].concat(...this.area);
-
-      case Side.NORTH: 
-        return this.area.getRow(0);
-      
-      case Side.SOUTH:
-        return this.area.getRow(-1);
-      
-      case Side.EAST:
-        return this.area.getCol(-1);
-
-      case Side.WEST:
-        return this.area.getCol(0);
-    }
-
-    throw new Error(`Unknown side: [${direction}]`);
-  }
 }
 
-
-const COLORS = [ 'green', 'orange', 'gray', 'cyan', 'pink', 'purple' ];

@@ -3,14 +3,14 @@ import { IArea } from "./i-area";
 import { INode, ITile } from "./i-node";
 import { Node, TemporalNode } from "./node";
 import { Cluster } from "./cluster";
-import Vector from "../core/vector";
+import { Vector3D } from "../core";
 
 
 export class Pathfinding {
   private readonly nodes = [] as Node[];
-  private readonly clusters: Cluster[][];
+  private readonly clusters: Cluster[][][];
   private readonly tempNodes = new WeakMap<INode, TemporalNode>();
-  public readonly size: Vector;
+  public readonly size: Vector3D;
 
 
   constructor(
@@ -21,16 +21,20 @@ export class Pathfinding {
     if (clusterSize < 3)
       throw new Error('Cluster size has to be an integer bigger than 2');
 
-    this.size = new Vector(world.size.x / clusterSize, world.size.y / clusterSize)
+    this.size = new Vector3D(world.size.x / clusterSize, world.size.y / clusterSize, world.size.z)
     this.clusters = [];
-    const areaSize = new Vector(clusterSize, clusterSize);
+    const areaSize = new Vector3D(clusterSize, clusterSize, 1);
 
-    for (let j = 0; j < this.size.y; j++) {
-      this.clusters[j] = [];
+    for (let k = 0; k < this.size.z; k++) {
+      this.clusters[k] = [];
 
-      for (let i = 0; i < this.size.x; i++) {
-        const range = world.getRange(areaSize.multiply(i, j), areaSize);
-        this.clusters[j][i] = new Cluster(world, algorithm, new Vector(i, j), range);
+      for (let j = 0; j < this.size.y; j++) {
+        this.clusters[k][j] = [];
+
+        for (let i = 0; i < this.size.x; i++) {
+          const range = world.getRange(areaSize.multiply(i, j, k), areaSize);
+          this.clusters[k][j][i] = new Cluster(world, algorithm, new Vector3D(i, j, k), range);
+        }
       }
     }
 
@@ -190,18 +194,19 @@ export class Pathfinding {
     return node.reconnect();
   }
 
-  private getClusterFor(child: INode) {
+  private getClusterFor(child: INode): Cluster {
     const index = child.location
-      .divide(this.clusterSize)
+      .divide(this.clusterSize, this.clusterSize, 1)
       .apply(Math.floor);
     
-    return this.clusters[index.y][index.x];
+    return this.clusters[index.z][index.y][index.x];
   }
 
   forEach(iterator: (cluster: Cluster, pathfinding: Pathfinding) => void) {
-    for (let row of this.clusters)
-      for (let cluster of row)
-        iterator(cluster, this);
+    for (const layer of this.clusters)
+      for (const row of layer)
+        for (const cluster of row)
+          iterator(cluster, this);
   }
 }
 

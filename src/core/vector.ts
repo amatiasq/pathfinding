@@ -2,9 +2,12 @@ export interface IVector {
   readonly x: number;
   readonly y: number;
   readonly isZero: boolean;
+  readonly magnitude: number;
+
+  /*
   readonly radians: number;
   readonly degrees: number;
-  readonly magnitude: number;
+  */
 
   add(x: number, y?: number): IVector;
   sustract(x: number, y?: number): IVector;
