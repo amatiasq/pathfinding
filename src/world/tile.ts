@@ -87,7 +87,7 @@ export default class Tile implements IPrintable, INode {
     if (!(other instanceof Tile))
       throw new TypeError(`Expected Tile but ${other.constructor.name} found`);
 
-    return this.isAdjacent(other) || this.isDiagonal(other);
+    return this.isAdjacent(other) || this.isDiagonal(other) || this.isAboveOrBelow(other);
   }
 
   isSameLayer(other: Tile) {

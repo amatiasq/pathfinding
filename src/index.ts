@@ -32,7 +32,7 @@ if (constants.PERF_ITERATIONS)
 frame();
 //randomPath();
 //debugger;
-// drawPath(world.get(1, 0, 4), world.get(3, 15, 15))
+drawPath(world.get(1, 1, 1), world.get(2, 1, 1))
 
 if (constants.RANDOM_PATH_INTERVAL)
   setInterval(randomPath, constants.RANDOM_PATH_INTERVAL)

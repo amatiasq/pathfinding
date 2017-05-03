@@ -57,7 +57,8 @@ export class Cluster {
         if (entrance !== node)
           this.addPathsToCache(node, entrance);
     
-    return this.paths.get(node);
+    // TODO: this default return used to be an issue
+    return this.paths.get(node) || new Map();
   }
 
   addPathsToCache(start: INode, end: INode) {

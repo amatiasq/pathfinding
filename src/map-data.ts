@@ -1,6 +1,6 @@
-const ROWS = 1;
-const COLUMNS = 1;
-const LAYERS = 2;
+const ROWS = 6;
+const COLUMNS = 6;
+const LAYERS = 3;
 const OBSTACLES = false;
 
 const layer = [];
