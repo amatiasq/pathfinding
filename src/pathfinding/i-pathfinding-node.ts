@@ -16,6 +16,6 @@ export interface IPathfindingTile extends IPathfindingNode {
   isNeighbor(node: IPathfindingNode): boolean;
 
   // debug
-  color: string;
-  content: string;
+  // color: string;
+  // content: string;
 }

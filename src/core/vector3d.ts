@@ -129,12 +129,13 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
 }
 
 
+
 /*
  * This version of Vector is immutable, any method that requires a modification
  * of the properties will return a new Vector.
  * If you want mutability you can import { MutableVector } instead
  */
-export default class Vector3D extends BaseVector3D<Vector3D> implements IVector3D {
+export class Vector3D extends BaseVector3D<Vector3D> implements IVector3D {
   public static ZERO = new Vector3D(0, 0, 0);
   public static MAX = new Vector3D(Infinity, Infinity, Infinity);
 
@@ -185,3 +186,6 @@ function degreesToRadians(degrees: number): number {
 function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
+
+
+export default Vector3D;
