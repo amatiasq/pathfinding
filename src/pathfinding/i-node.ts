@@ -1,15 +1,14 @@
 import { IArea } from "./i-area";
+import { IAStarNode } from "./a-star";
 import Vector3D from "../core/vector3d";
 
 
-export interface INode {
+export interface INode extends IAStarNode {
   readonly location: Vector3D;
   readonly travelCost: number;
   readonly isObstacle: boolean;
-  getCostTo(neighbor: INode): number;
   isNeighbor(node: INode): boolean;
-  getNeighbors(area?: IArea): Map<INode, INodeRelation>;
-  estimateDistanceTo(node: INode): number;
+  getNeighbors(area?: IArea): INode[];
 }
 
 

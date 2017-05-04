@@ -3,32 +3,28 @@ import { IArea } from "./i-area";
 import { INode } from "./i-node";
 import { round } from "../utils";
 
+const DEBUG = true;
 
-export default class AStar<T extends INode> implements IPathfindingAlgorithm {
+
+export interface IAStarNode {
+  getNeighbors(area?: IArea): IAStarNode[];
+  getCostTo(neighbor: IAStarNode): number;
+  estimateDistanceTo(node: IAStarNode): number;
+}
+
+
+export class AStar<T extends IAStarNode> {
   private pool: AStarNodePool<T>;
 
 
-  constructor(closerModifier: number) {
+  constructor(closerModifier = 1) {
     this.pool = new AStarNodePool<T>(closerModifier);
   }
 
 
-  getCost(start: T, path: T[]): number {
-    let cost = 0;
-    let prev = null;
-
-    for (const step of path) {
-      if (prev)
-        cost += prev.getCostTo(step);
-      prev = step;
-    }
-
-    return round(cost);
-  }
-
   getPath(start: T, end: T, area?: IArea): T[] {
     if (start === end)
-      return [ end ];
+      return [];
 
   /*
     const before = performance.now();
@@ -40,10 +36,10 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
 
   private getPathInternal(start: T, end: T, area?: IArea): T[] {
   */
-    const open = new Set<AStarNode<T>>();
-    const closed = new Set<AStarNode<T>>();
+    const open = new Set<AStarNodeContainer<T>>();
+    const closed = new Set<AStarNodeContainer<T>>();
 
-    let current: AStarNode<T>;
+    let current: AStarNodeContainer<T>;
     open.add(this.pool.getNode(start));
 
     while (open.size) {
@@ -55,12 +51,15 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
       // if (current.tile.isEmpty && !this.hasRampBelow(current))
       //  continue;
 
-      for (const [ child, relation ] of current.child.getNeighbors(area)) {
+      for (const child of current.child.getNeighbors(area)) {
         const neighbor = this.pool.getNode(child as T);
-        const movement = (current.pathCost || 0) + relation.cost;
+        const cost = current.child.getCostTo(child);
+        const movement = (current.pathCost || 0) + cost;
 
-        if (child.isObstacle)
-          throw new Error('No obstacle tiles should make it to A* algorithm');
+        if (DEBUG) {
+          if ((child as any).isObstacle)
+            throw new Error('No obstacle tiles should make it to A* algorithm');
+        }
 
         if (closed.has(neighbor))
           continue;
@@ -88,8 +87,8 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
    * Helpers
    */
 
-  getNext(open: NodeSet<T>, closed: NodeSet<T>): AStarNode<T> {
-    let best: AStarNode<T> = null;
+  private getNext(open: NodeSet<T>, closed: NodeSet<T>): AStarNodeContainer<T> {
+    let best: AStarNodeContainer<T> = null;
 
     for (let item of open) {
       if (!best || (item.cost < best.cost || (item.cost === best.cost && item.cost < best.cost)))
@@ -101,7 +100,7 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
     return best;
   }
 
-  retrace(start: T, end: AStarNode<T>): T[] {
+  private retrace(start: T, end: AStarNodeContainer<T>): T[] {
     const path = [] as T[];
     let current = end;
 
@@ -132,8 +131,8 @@ export default class AStar<T extends INode> implements IPathfindingAlgorithm {
 }
 
 
-class AStarNode<T> {
-  public parent: AStarNode<T>;
+class AStarNodeContainer<T> {
+  public parent: AStarNodeContainer<T>;
   public pathCost: number;
   public estimatedCost: number;
   private _isDisposed = false;
@@ -178,9 +177,9 @@ class AStarNode<T> {
 }
 
 
-class AStarNodePool<T extends object> {
-  private pool = new WeakMap<T, AStarNode<T>>();
-  private using = new Set<AStarNode<T>>();
+class AStarNodePool<T extends IAStarNode> {
+  private pool = new WeakMap<T, AStarNodeContainer<T>>();
+  private using = new Set<AStarNodeContainer<T>>();
 
   constructor(
     private closerModifier: number,
@@ -192,13 +191,13 @@ class AStarNodePool<T extends object> {
   }
 
 
-  getNode(tile: T): AStarNode<T> {
+  getNode(tile: T): AStarNodeContainer<T> {
     let instance;
 
     if (this.pool.has(tile))
       instance = this.pool.get(tile)
     else
-      instance = new AStarNode<T>(tile, this.closerModifier);
+      instance = new AStarNodeContainer<T>(tile, this.closerModifier);
 
     this.pool.set(tile, instance);
     this.using.add(instance);
@@ -206,7 +205,7 @@ class AStarNodePool<T extends object> {
     return instance;
   }
 
-  dispose(node: AStarNode<T> | AStarNode<T>[]) {
+  dispose(node: AStarNodeContainer<T> | AStarNodeContainer<T>[]) {
     if (Array.isArray(node)) {
       node.forEach(entry => this.dispose(entry));
       return;
@@ -219,5 +218,5 @@ class AStarNodePool<T extends object> {
 
 
 
-interface NodeSet<T> extends Set<AStarNode<T>> {}
+interface NodeSet<T> extends Set<AStarNodeContainer<T>> {}
 class DisposedInstanceInvocationError extends Error {}

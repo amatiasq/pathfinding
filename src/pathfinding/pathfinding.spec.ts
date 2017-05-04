@@ -1,10 +1,18 @@
-import AStar, { IAStarNode } from './a-star';
-import { IArea } from "./i-area";
-import { assert } from "chai";
+import { AStar } from "./a-star";
+import { Pathfinding } from "./pathfinding";
+import { IPathfindingNode } from "./i-pathfinding-node";
 
-describe('A* algorithm', () => {
-  let sut: AStar<NodeMock>;
-  beforeEach(() => sut = new AStar<NodeMock>(1));
+
+describe('Pathfinding library', () => {
+  let sut: Pathfinding;
+  let world: IArea;
+  let algorithm: AStar<NodeMock>;
+
+  beforeEach(() => {
+    algorithm = new AStar(1);
+    sut = new Pathfinding(1);
+
+  });
 
 
   it('should return null if there is no connection', () => {
@@ -88,8 +96,8 @@ describe('A* algorithm', () => {
 });
 
 
-class NodeMock implements IAStarNode {
-  private neighbors = new Map<IAStarNode, number>();
+class NodeMock implements IPathfindingNode {
+  private neighbors = new Map<IPathfindingNode, number>();
 
   constructor(private distanceToEnd: number) {}
 

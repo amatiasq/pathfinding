@@ -1,8 +1,8 @@
 import { IArea } from "./i-area";
-import { INode } from "./i-node";
+import { IPathfindingNode } from "./i-pathfinding-node";
 
 
 export interface IPathfindingAlgorithm  {
-  getPath(start: INode, end: INode, area?: IArea): INode[];
-  getCost(start: INode, path: INode[]): number;
+  getPath(start: IPathfindingNode, end: IPathfindingNode, area?: IArea): IPathfindingNode[];
+  getCost(start: IPathfindingNode, path: IPathfindingNode[]): number;
 }
