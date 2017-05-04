@@ -1,18 +1,20 @@
 module.exports = {
   devtool: 'source-map',
-  entry: './src/index.ts',
-  output: { filename: './dist/built.js' },
-
+  entry: './src/app.ts',
+  output: {
+    filename: 'dist/bundle.js'
+  },
   resolve: {
-    extensions: ['.web.js', '.ts', '.js']
+    extensions: ['.ts', '.js']
   },
-
   module: {
-    loaders: [{ test: /\.ts$/, loader: 'ts-loader' }],
-  },
-
-  externals: {
-    'phaser': 'Phaser',
+    loaders: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        loader: 'ts-loader'
+      }
+    ]
   },
 
   devServer: {
@@ -22,4 +24,4 @@ module.exports = {
       progress: true,
     },
   },
-};
+}
