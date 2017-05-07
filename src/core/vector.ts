@@ -1,4 +1,5 @@
 export interface IVector {
+  readonly DIMENSIONS: number;
   readonly x: number;
   readonly y: number;
   readonly isZero: boolean;
@@ -20,10 +21,12 @@ export interface IVector {
   apply(operation: (value: number) => number): IVector;
   toJSON(): string;
   toString(): string;
+  toArray(): number[];
 }
 
 
 abstract class BaseVector<T extends IVector> implements IVector {
+  public readonly DIMENSIONS: 2;
   public readonly x: number;
   public readonly y: number;
   public static readonly round = round;
@@ -117,6 +120,10 @@ abstract class BaseVector<T extends IVector> implements IVector {
     return `[Vector(${this.x},${this.y})]`;
   }
 
+  toArray(): number[] {
+    return [ this.x, this.y ];
+  }
+
   add(x: number, y: number = x): T {
     return this.set(this.x + x, this.y + y);
   }
@@ -162,7 +169,7 @@ abstract class BaseVector<T extends IVector> implements IVector {
  * of the properties will return a new Vector.
  * If you want mutability you can import { MutableVector } instead
  */
-export default class Vector extends BaseVector<Vector> implements IVector {
+export class Vector extends BaseVector<Vector> implements IVector {
   public static ZERO = new Vector(0, 0);
   public static MAX = new Vector(Infinity, Infinity);
 

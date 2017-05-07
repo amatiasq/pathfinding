@@ -3,7 +3,7 @@ import { IArea } from "./i-area";
 import { INode, ITile } from "./i-node";
 import { Node, TemporalNode } from "./node";
 import { Cluster } from "./cluster";
-import { Vector3D } from "../core";
+import { Vector3D } from "../core/vector3d";
 
 
 export class Pathfinding {

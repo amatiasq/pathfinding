@@ -1,9 +1,7 @@
 import { Side } from "../config";
 import { IPathfindingTile } from "./i-pathfinding-node";
 import { Vector3D } from "../core/vector3d";
-import ndarray from "ndarray";
-
-
+import * as ndarray from "ndarray";
 
 
 export interface IArea {
@@ -19,35 +17,29 @@ export interface IArea {
 export class Area<T extends IPathfindingTile> implements IArea {
   public readonly size: Vector3D;
   private readonly offset: Vector3D;
-  private readonly grid: ndarray;
+  private readonly grid: ndarray<IPathfindingTile>;
 
 
-  constructor(
-    grid: T[][][],
-  ) {
-    this.grid = ndarray(new Int8Array(grid), [ grid.length, grid[0].length, grid[0][0].length ]);
-
-
-
-    const firstLayer = grid[0];
-    const firstRow = firstLayer[0];
-    const firstTile = firstRow[0];
-    this.size = new Vector3D(firstRow.length, firstLayer.length, grid.length);
-    this.offset = firstTile.location;
+  constructor(grid: T[][][]) {
+    const flattenGrid = [] as T[];
+    for (let i = 0; i < grid.length; i++)
+      flattenGrid.concat(...grid[i]);
+    
+    this.size = new Vector3D(grid[0][0].length, grid[0].length, grid.length);
+    this.grid = ndarray(flattenGrid, [ this.size.z, this.size.y, this.size.x ]);
+    this.offset = this.grid.get(0, 0, 0).location;
   }
 
 
-  get(z: number, x: number, y: number): Tile {
-    const layer = this.grid[z] || [];
-    const row = layer[y];
-    return row ? row[x] : null;
+  get(z: number, x: number, y: number): IPathfindingTile {
+    return this.grid.get(z, x, y) || null;
   }
 
   /**
    * Takes two adjacent faces of a cube and returns all tiles at the edge
    * between the two faces.
    */
-  getEdge(faceA: Side, faceB: Side): Tile[] {
+  getEdge(faceA: Side, faceB: Side): IPathfindingTile[] {
     let z = null as number;
     let x = null as number;
     let y = null as number;

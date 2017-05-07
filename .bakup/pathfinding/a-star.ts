@@ -220,3 +220,4 @@ class AStarNodePool<T extends IAStarNode> {
 
 interface NodeSet<T> extends Set<AStarNodeContainer<T>> {}
 class DisposedInstanceInvocationError extends Error {}
+export default AStar;

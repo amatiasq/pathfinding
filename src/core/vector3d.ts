@@ -12,12 +12,11 @@ export interface IVector3D extends IVector {
   round(): IVector3D;
   abs(): IVector3D;
   apply(operation: (value: number) => number): IVector3D;
-  toJSON(): string;
-  toString(): string;
 }
 
 
 abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
+  public readonly DIMENSIONS: 3;
   public readonly x: number;
   public readonly y: number;
   public readonly z: number;
@@ -87,6 +86,10 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
 
   toString(): string {
     return `[Vector3D(${this.x},${this.y},${this.z})]`;
+  }
+
+  toArray(): number[] {
+    return [ this.x, this.y, this.z ];
   }
 
   add(x: number, y: number = x, z: number = x): T {
@@ -186,6 +189,3 @@ function degreesToRadians(degrees: number): number {
 function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
-
-
-export default Vector3D;

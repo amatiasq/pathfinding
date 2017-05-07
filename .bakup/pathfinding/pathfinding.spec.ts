@@ -1,3 +1,4 @@
+import { assert } from "chai";
 import { AStar } from "./a-star";
 import { Pathfinding } from "./pathfinding";
 import { IPathfindingTile } from "./i-pathfinding-node";
@@ -6,7 +7,7 @@ import { Side } from "../config";
 import { Vector3D } from "../core/vector3d";
 
 
-describe('Pathfinding library', () => {
+describe.skip('Pathfinding library', () => {
   let sut: Pathfinding;
   let world: IArea;
   let algorithm: AStar<NodeMock>;
