@@ -6,8 +6,7 @@ export class Matrix<T> {
 
   constructor(
     private readonly data: T[],
-    public readonly shape: number[],
-    private readonly offset: number[] = null,
+    public readonly shape: number[]
   ) {
     this.operator = [];
     let accumulator = 1;
@@ -17,11 +16,6 @@ export class Matrix<T> {
       this.operator[i] = accumulator;
       accumulator *= shape[i];
     }
-
-    if (offset)
-      this.checkDimensions(offset);
-    else
-      this.offset = shape.map(() => 0);
   }
 
 
@@ -45,9 +39,21 @@ export class Matrix<T> {
       this.checkDimensions(size);
     else
       size = this.shape.map((dimension, index) => dimension - offset[index]);
-    
-    const realOffset = offset.map((dimension, index) => dimension + this.offset[index]);
-    return new Matrix(this.data, size, realOffset);
+
+    const result = this.data.filter((value, index) => {
+      for (let i = 0; i < this.operator.length; i++) {
+        const operator = this.operator[i];
+        const axisValue = Math.floor(index / operator);
+        index = index % operator;
+
+        if (axisValue < offset[i] || axisValue - offset[i] >= size[i])
+          return false;
+      }
+
+      return true;
+    });
+
+    return new Matrix(result, size);
   }
 
 
@@ -55,9 +61,8 @@ export class Matrix<T> {
     this.checkDimensions(coords);
     let index = 0;
 
-    console.log(`requesting ${coords} offset ${this.offset} operators ${this.operator}`);
     for (let i = 0; i < coords.length; i++)
-      index += (coords[i] + this.offset[i]) * this.operator[i];
+      index += coords[i] * this.operator[i];
 
     return index;
   }

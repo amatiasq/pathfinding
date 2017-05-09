@@ -108,7 +108,7 @@ describe("Matrix component", () => {
       sut = make_matrix(data, [ 4, 4 ]);
     });
 
-    it.only("should index from the subsection", () => {
+    it("should index from the subsection", () => {
       const child = sut.getRange([ 1, 1 ]);
       assert.equal(child.get(0, 0), sut.get(1, 1));
     });
@@ -120,8 +120,14 @@ describe("Matrix component", () => {
 
     it("returned matrix should be able to slice properly too", () => {
       const child = sut.getRange([ 1, 1 ]);
-      const subchild = child.getRange([ 1, 1 ]);
-      assert.equal(subchild.get(0, 0), sut.get(2, 2));
+      const subchild = child.getRange([ 2, 2 ]);
+      assert.equal(subchild.get(0, 0), sut.get(3, 3));
+    });
+
+    it("should accept a size restriction", () => {
+      const child = sut.getRange([ 1, 1 ], [ 2, 2 ]);
+      assert.deepEqual(child.shape, [ 2, 2 ]);
+      assert.isUndefined(child.get(2, 2));
     });
   });
 
