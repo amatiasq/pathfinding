@@ -4,7 +4,7 @@ module.exports = function (config) {
   config.set({
     basePath: '',
     frameworks: ['mocha', 'chai', 'sinon'],
-    
+
     files: [
       'src/**/*.spec.ts'
     ],
@@ -22,7 +22,8 @@ module.exports = function (config) {
       'text/x-typescript': ['ts','tsx']
     },
 
-    reporters: ['progress'],
+    // reporters: ['progress'],
+    reporters: ['mocha'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,

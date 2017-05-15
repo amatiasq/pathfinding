@@ -1,12 +1,12 @@
-import { IVector } from "./vector";
+import { IVector } from './vector';
 
 export class Matrix<T> {
   private readonly operator: number[];
-  public readonly dimensions: number;
+  readonly dimensions: number;
 
   constructor(
     private readonly data: T[],
-    public readonly shape: number[]
+    public readonly shape: number[],
   ) {
     this.operator = [];
     let accumulator = 1;
@@ -57,7 +57,7 @@ export class Matrix<T> {
   }
 
 
-  public getIndex(coords: number[]): number {
+  private getIndex(coords: number[]): number {
     this.checkDimensions(coords);
     let index = 0;
 
@@ -75,23 +75,20 @@ export class Matrix<T> {
 }
 
 
-
-export class VectorMatrix<T> extends Matrix<T> {
-  get(vector: IVector): T;
-  get(...coords: number[]): T;
-  get(...coords: (IVector | number)[]) {
-    return super.get(...this.normalizeCoords(coords));
+export class VectorMatrix<T, U extends IVector> extends Matrix<T> {
+  constructor(
+    data: T[],
+    public readonly size: U,
+  ) {
+    super(data, size.toArray().reverse());
   }
 
-  set(value: T, vector: IVector): T;
-  set(value: T, ...coords: number[]): T;
-  set(value: T, ...coords: (IVector | number)[]) {
-    return super.set(value, ...this.normalizeCoords(coords));
+
+  getVector(vector: U): T {
+    return this.get(...vector.toArray().reverse());
   }
 
-  private normalizeCoords(coords: (IVector | number)[]): number[] {
-    return typeof coords[0] === 'number' ?
-      coords as number[] :
-      (coords[0] as IVector).toArray().reverse();
+  setVector(value: T, vector: U): T {
+    return this.set(value, ...vector.toArray().reverse());
   }
 }

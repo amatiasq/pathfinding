@@ -1,3 +1,6 @@
+import { degreesToRadians, round, DEGREES_IN_PI_RADIANS, MAX_DEGREES } from './helpers';
+
+
 export interface IVector {
   readonly DIMENSIONS: number;
   readonly x: number;
@@ -10,6 +13,8 @@ export interface IVector {
   readonly degrees: number;
   */
 
+  is(x: number, y: number): boolean;
+  isEqual(vector: IVector): boolean;
   add(x: number, y?: number): IVector;
   sustract(x: number, y?: number): IVector;
   multiply(x: number, y?: number): IVector;
@@ -19,20 +24,20 @@ export interface IVector {
   round(): IVector;
   abs(): IVector;
   apply(operation: (value: number) => number): IVector;
+  clone(): IVector;
   toJSON(): string;
   toString(): string;
   toArray(): number[];
+  toImmutable(): IVector;
+  toMutable(): IVector;
 }
 
 
 abstract class BaseVector<T extends IVector> implements IVector {
-  public readonly DIMENSIONS: 2;
-  public readonly x: number;
-  public readonly y: number;
-  public static readonly round = round;
+  static readonly round = round;
 
   static fromRadians(radians: number): BaseVector<IVector> {
-    return new (this as any)(Math.cos(radians), Math.sin(radians));
+    return this.construct(Math.cos(radians), Math.sin(radians));
   }
 
   static fromDegrees(degrees: number): BaseVector<IVector> {
@@ -40,12 +45,12 @@ abstract class BaseVector<T extends IVector> implements IVector {
   }
 
   static fromMagnitude(value: number): BaseVector<IVector> {
-    return new (this as any)(value, 0);
+    return this.construct(value, 0);
   }
 
   static from(degrees: number, magnitude: number): BaseVector<IVector> {
     const vector = this.fromDegrees(degrees);
-    return new (this as any)(vector.x * magnitude, vector.y * magnitude);
+    return this.construct(vector.x * magnitude, vector.y * magnitude);
   }
 
   static merge(vectorA: IVector, vectorB: IVector, ...others: IVector[]): BaseVector<IVector> {
@@ -59,7 +64,7 @@ abstract class BaseVector<T extends IVector> implements IVector {
       }
     }
 
-    return new (this as any)(x, y);
+    return this.construct(x, y);
   }
 
   static diff(vectorA: IVector, vectorB: IVector, ...others: IVector[]): BaseVector<IVector> {
@@ -73,8 +78,20 @@ abstract class BaseVector<T extends IVector> implements IVector {
       }
     }
 
+    return this.construct(x, y);
+  }
+
+  private static construct(x: number, y: number): BaseVector<IVector> {
+    // We need to use any because it's going to be a subclass and we can't use
+    //   BaseVector because it's abstract
+    // tslint:disable-next-line:no-any
     return new (this as any)(x, y);
   }
+
+
+  readonly DIMENSIONS: 2;
+  readonly x: number;
+  readonly y: number;
 
 
   constructor(x: number, y: number) {
@@ -103,8 +120,8 @@ abstract class BaseVector<T extends IVector> implements IVector {
   }
 
   get degrees(): number {
-    const degrees = (this.radians / Math.PI * 180) % 360;
-    return degrees < 0 ? degrees + 360 : degrees;
+    const degrees = (this.radians / Math.PI * DEGREES_IN_PI_RADIANS) % MAX_DEGREES;
+    return degrees < 0 ? degrees + MAX_DEGREES : degrees;
   }
 
   get magnitude(): number {
@@ -122,6 +139,14 @@ abstract class BaseVector<T extends IVector> implements IVector {
 
   toArray(): number[] {
     return [ this.x, this.y ];
+  }
+
+  is(x: number, y: number): boolean {
+    return this.x === x && this.y === y;
+  }
+
+  isEqual(vector: IVector): boolean {
+    return this.x === vector.x && this.y === vector.y;
   }
 
   add(x: number, y: number = x): T {
@@ -160,21 +185,35 @@ abstract class BaseVector<T extends IVector> implements IVector {
     return this.set(operation(this.x), operation(this.y));
   }
 
+  abstract clone(): T;
+  abstract toImmutable(): Vector;
+  abstract toMutable(): MutableVector;
   protected abstract set(x: number, y: number): T;
 }
 
 
-/*
+/**
  * This version of Vector is immutable, any method that requires a modification
  * of the properties will return a new Vector.
- * If you want mutability you can import { MutableVector } instead
+ * If you want mutability you can import { MutableVector } instead
  */
 export class Vector extends BaseVector<Vector> implements IVector {
-  public static ZERO = new Vector(0, 0);
-  public static MAX = new Vector(Infinity, Infinity);
+  static ZERO = new Vector(0, 0);
+  static MAX = new Vector(Infinity, Infinity);
 
+  // This method doesn't use this because this implementation is inmutable
+  //   It can be mutable in other implementations.
+  // tslint:disable-next-line:prefer-function-over-method
   protected set(x: number, y: number): Vector {
     return new Vector(x, y);
+  }
+
+  clone() {
+    return new Vector(this.x, this.y);
+  }
+
+  toImmutable(): Vector {
+    return this;
   }
 
   toMutable(): MutableVector {
@@ -183,10 +222,9 @@ export class Vector extends BaseVector<Vector> implements IVector {
 }
 
 
-
 export class MutableVector extends BaseVector<MutableVector> implements IVector {
-  public x: number;
-  public y: number;
+  x: number;
+  y: number;
 
 
   set radians(value: number) {
@@ -218,19 +256,8 @@ export class MutableVector extends BaseVector<MutableVector> implements IVector 
   toImmutable(): Vector {
     return new Vector(this.x, this.y);
   }
-}
 
-
-
-function degreesToRadians(degrees: number): number {
-  degrees = degrees % 360;
-
-  if (degrees < 0)
-    degrees += 360;
-
-  return degrees * Math.PI / 180;
-}
-
-function round(value: number): number {
-  return Math.round(value * 100) / 100;
+  toMutable(): MutableVector {
+    return this.clone();
+  }
 }
