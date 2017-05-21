@@ -36,6 +36,12 @@ describe('Matrix component', () => {
     assert.deepEqual(vectorSut.size, size);
   });
 
+  it.skip('should return null if one of the values is negative', () => {
+    // TODO: Negative values might return last indexes
+    sut = makeMatrix([ { value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }], [ 2, 2 ]);
+    assert.isUndefined(sut.get(1, -1));
+  });
+
 
   describe('simple two by two matrix', () => {
     beforeEach(() => {

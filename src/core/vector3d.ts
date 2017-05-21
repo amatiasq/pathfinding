@@ -1,5 +1,5 @@
 import { degreesToRadians, round } from './helpers';
-import { IVector, VectorSetter } from './vector';
+import { IVector, VectorSetter, VectorTest } from './vector';
 
 
 export interface IVector3D extends IVector {
@@ -111,12 +111,7 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
   }
 
   get magnitude(): number {
-    if (this.isZero)
-      return 0;
-
-    // We must do "Math.sqrt(plain) * Math.sqrt(plain)" which simplifies to "plain"
-    const plain = this.x * this.x + this.y * this.y;
-    return round(Math.sqrt(plain + this.z * this.z));
+    return this.isZero ? 0 : Math.hypot(this.x, this.y, this.z);
   }
 
 
@@ -163,6 +158,12 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
 
   apply(operation: (coord: number) => number): T {
     return this.setValue(operation(this.x), operation(this.y), operation(this.z));
+  }
+  every(operation: VectorTest): boolean {
+    return operation(this.x) && operation(this.y) && operation(this.z);
+  }
+  some(operation: VectorTest): boolean {
+    return operation(this.x) || operation(this.y) || operation(this.z);
   }
 
   abstract clone(): T;

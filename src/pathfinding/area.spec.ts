@@ -165,6 +165,16 @@ describe('Area class', () => {
 
       assert.include(neighbors, sut.get(below));
     });
+
+
+    it('should return empty array if node has no neighbors', () => {
+      const target = new Vector3D(0, 0, 0);
+      const sut = makeArea(new Vector3D(1, 1, 1));
+      const neighbors = sut.getNeighbors(sut.get(target));
+
+      assert.isArray(neighbors);
+      assert.equal(neighbors.length, 0);
+    });
   });
 
 

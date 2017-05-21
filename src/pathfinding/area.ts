@@ -101,9 +101,13 @@ export class Area<T extends INode> {
       for (let j = -1; j <= 1; j++) {
         if (i === 0 && j === 0) continue;
 
-        const neighbor = this.get(location.add({ x: i, y: j }));
+        const neighborLocation = location.add({ x: i, y: j });
+        if (neighborLocation.some(coord => coord < 0))
+          continue;
 
-        if (!neighbor.isObstacle)
+        const neighbor = this.get(neighborLocation);
+
+        if (neighbor && !neighbor.isObstacle)
           neighbors.push(neighbor);
       }
     }

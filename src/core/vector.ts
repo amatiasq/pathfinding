@@ -28,6 +28,8 @@ export interface IVector {
   divideValue(x: number, y?: number): IVector;
 
   apply(operation: (coord: number) => number): IVector;
+  every(operation: VectorTest): boolean;
+  some(operation: VectorTest): boolean;
 
   clone(): IVector;
   toImmutable(): IVector;
@@ -149,7 +151,7 @@ abstract class BaseVector<T extends IVector> implements IVector {
   }
 
   get magnitude(): number {
-    return this.isZero ? 0 : round(Math.sqrt(this.x * this.x + this.y * this.y));
+    return this.isZero ? 0 : round(Math.hypot(this.x, this.y));
   }
 
 
@@ -196,6 +198,12 @@ abstract class BaseVector<T extends IVector> implements IVector {
 
   apply(operation: (coord: number) => number): T {
     return this.setValue(operation(this.x), operation(this.y));
+  }
+  every(operation: VectorTest): boolean {
+    return operation(this.x) && operation(this.y);
+  }
+  some(operation: VectorTest): boolean {
+    return operation(this.x) || operation(this.y);
   }
 
   abstract clone(): T;
@@ -288,3 +296,4 @@ interface IYSetter {
 }
 
 export type VectorSetter = IXSetter | IYSetter;
+export type VectorTest = (coord: number) => boolean;
