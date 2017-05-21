@@ -1,13 +1,15 @@
 {
-  "name": "nomes",
-  "version": "1.0.0",
+  "name": "amq-pathfinding",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.html",
+  "main": "src/main.ts",
+
   "dependencies": {
     "@types/chai": "^3.5.2",
     "@types/mocha": "^2.2.41",
     "ndarray": "^1.0.18"
   },
+
   "devDependencies": {
     "@types/ndarray": "^1.0.3",
     "@types/sinon": "^2.2.1",
@@ -28,12 +30,14 @@
     "typescript": "^2.3.2",
     "webpack": "^2.4.1"
   },
+
   "scripts": {
     "test": "karma start ./config/karma.conf.js",
     "test:ci": "TRAVIS=true karma start ./config/karma.conf.js",
     "test:watch": "WATCH=true karma start ./config/karma.conf.js",
     "build": "cd config; webpack --config ./webpack.config.js"
   },
-  "author": "",
-  "license": "ISC"
+
+  "author": "A. Matías Quezada <amatiasq@gmail.com>",
+  "license": "MIT"
 }

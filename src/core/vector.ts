@@ -13,32 +13,37 @@ export interface IVector {
   readonly degrees: number;
   */
 
-  is(x: number, y: number): boolean;
-  isEqual(vector: IVector): boolean;
-  add(x: number, y?: number): IVector;
-  sustract(x: number, y?: number): IVector;
-  multiply(x: number, y?: number): IVector;
-  divide(x: number, y?: number): IVector;
-  merge(other: IVector): IVector;
-  diff(other: IVector): IVector;
-  round(): IVector;
-  abs(): IVector;
-  apply(operation: (value: number) => number): IVector;
+  is({ x, y }: VectorSetter): boolean;
+  set({ x, y }: VectorSetter): IVector;
+  add({ x, y }: VectorSetter): IVector;
+  sustract({ x, y }: VectorSetter): IVector;
+  multiply({ x, y }: VectorSetter): IVector;
+  divide({ x, y }: VectorSetter): IVector;
+
+  isValue(x: number, y?: number): boolean;
+  setValue(x: number, y?: number): IVector;
+  addValue(x: number, y?: number): IVector;
+  sustractValue(x: number, y?: number): IVector;
+  multiplyValue(x: number, y?: number): IVector;
+  divideValue(x: number, y?: number): IVector;
+
+  apply(operation: (coord: number) => number): IVector;
+
   clone(): IVector;
-  toJSON(): string;
-  toString(): string;
-  toArray(): number[];
   toImmutable(): IVector;
   toMutable(): IVector;
+  toString(): string;
+  toArray(): number[];
+  toJSON(): string;
 }
 
 
 abstract class BaseVector<T extends IVector> implements IVector {
   static readonly round = round;
 
-  static *iterate(vectorA: IVector, vectorB = new Vector(0, 0)) {
-    const start = new Vector(Math.min(vectorA.x, vectorB.x), Math.min(vectorA.y, vectorB.y));
-    const end = new Vector(Math.max(vectorA.x, vectorB.x), Math.max(vectorA.y, vectorB.y));
+  static *iterate(vectorA: IVector, vectorB: IVector = new Vector(0, 0)) {
+    const start = this.apply(Math.min, vectorA, vectorB);
+    const end = this.apply(Math.max, vectorA, vectorB);
     const current = start.toMutable() as MutableVector;
 
     for (current.y = start.y; current.y < end.y; current.y++)
@@ -46,6 +51,14 @@ abstract class BaseVector<T extends IVector> implements IVector {
         yield current.toImmutable();
   }
 
+  static apply(action: (...values: number[]) => number, ...vectors: IVector[]) {
+    return new Vector(
+      action(...vectors.map(vector => vector.x)),
+      action(...vectors.map(vector => vector.y)),
+    );
+  }
+
+  /*
   static fromRadians(radians: number): BaseVector<IVector> {
     return this.construct(Math.cos(radians), Math.sin(radians));
   }
@@ -62,6 +75,7 @@ abstract class BaseVector<T extends IVector> implements IVector {
     const vector = this.fromDegrees(degrees);
     return this.construct(vector.x * magnitude, vector.y * magnitude);
   }
+  */
 
   static merge(vectorA: IVector, vectorB: IVector, ...others: IVector[]): BaseVector<IVector> {
     let x = vectorA.x + vectorB.x;
@@ -139,66 +153,69 @@ abstract class BaseVector<T extends IVector> implements IVector {
   }
 
 
-  toJSON(): string {
-    return `{x:${this.x},y:${this.y}}`;
+  is({ x = this.x, y = this.y }: VectorSetter): boolean {
+    return this.x === x && this.y === y;
+  }
+  isValue(x: number, y = x): boolean {
+    return this.x === x && this.y === y;
+  }
+
+  set({ x = this.x, y = this.y }: VectorSetter): T {
+    return this.setValue(x, y);
+  }
+  abstract setValue(x: number, y?: number): T;
+
+  add({ x = 0, y = 0 }: VectorSetter): T {
+    return this.setValue(this.x + x, this.y + y);
+  }
+  addValue(x: number, y = x): T {
+    return this.setValue(this.x + x, this.y + y);
+  }
+
+  sustract({ x = 0, y = 0 }: VectorSetter): T {
+    return this.setValue(this.x - x, this.y - y);
+  }
+  sustractValue(x: number, y = x): T {
+    return this.setValue(this.x - x, this.y - y);
+  }
+
+  multiply({ x = 1, y = 1 }: VectorSetter): T {
+    return this.setValue(this.x * x, this.y * y);
+  }
+  multiplyValue(x: number, y = x): T {
+    return this.setValue(this.x * x, this.y * y);
+  }
+
+  divide({ x = 1, y = 1 }: VectorSetter): T {
+    return this.setValue(this.x / x, this.y / y);
+  }
+  divideValue(x: number, y = x): T {
+    return this.setValue(this.x / x, this.y / y);
+  }
+
+
+  apply(operation: (coord: number) => number): T {
+    return this.setValue(operation(this.x), operation(this.y));
+  }
+
+  abstract clone(): T;
+  toImmutable(): Vector {
+    return new Vector(this.x, this.y);
+  }
+  toMutable(): MutableVector {
+    return new MutableVector(this.x, this.y);
   }
 
   toString(): string {
     return `[Vector(${this.x},${this.y})]`;
   }
-
   toArray(): number[] {
     return [ this.x, this.y ];
   }
-
-  is(x: number, y: number): boolean {
-    return this.x === x && this.y === y;
+  toJSON(): string {
+    return `{x:${this.x},y:${this.y}}`;
   }
 
-  isEqual(vector: IVector): boolean {
-    return this.x === vector.x && this.y === vector.y;
-  }
-
-  add(x: number, y: number = x): T {
-    return this.set(this.x + x, this.y + y);
-  }
-
-  sustract(x: number, y: number = x): T {
-    return this.set(this.x - x, this.y - y);
-  }
-
-  multiply(x: number, y: number = x): T {
-    return this.set(this.x * x, this.y * y);
-  }
-
-  divide(x: number, y: number = x): T {
-    return this.set(this.x / x, this.y / y);
-  }
-
-  merge(other: IVector): T {
-    return this.set(this.x + other.x, this.y + other.y);
-  }
-
-  diff(other: IVector): T {
-    return this.set(this.x - other.x, this.y - other.y);
-  }
-
-  round(): T {
-    return this.set(round(this.x), round(this.y));
-  }
-
-  abs(): T {
-    return this.apply(Math.abs);
-  }
-
-  apply(operation: (value: number) => number): T {
-    return this.set(operation(this.x), operation(this.y));
-  }
-
-  abstract clone(): T;
-  abstract toImmutable(): Vector;
-  abstract toMutable(): MutableVector;
-  protected abstract set(x: number, y: number): T;
 }
 
 
@@ -214,20 +231,12 @@ export class Vector extends BaseVector<Vector> implements IVector {
   // This method doesn't use this because this implementation is inmutable
   //   It can be mutable in other implementations.
   // tslint:disable-next-line:prefer-function-over-method
-  protected set(x: number, y: number): Vector {
+  setValue(x: number, y = x): Vector {
     return new Vector(x, y);
   }
 
   clone() {
-    return new Vector(this.x, this.y);
-  }
-
-  toImmutable(): Vector {
-    return this;
-  }
-
-  toMutable(): MutableVector {
-    return new MutableVector(this.x, this.y);
+    return this.toImmutable();
   }
 }
 
@@ -253,21 +262,29 @@ export class MutableVector extends BaseVector<MutableVector> implements IVector 
     this.y = Math.sin(value) * prevMagnitude;
   }
 
-  protected set(x: number, y: number): this {
+
+  setValue(x: number, y = x): this {
     this.x = x;
     this.y = y;
     return this;
   }
 
   clone() {
-    return new MutableVector(this.x, this.y);
-  }
-
-  toImmutable(): Vector {
-    return new Vector(this.x, this.y);
-  }
-
-  toMutable(): MutableVector {
-    return this.clone();
+    return this.toMutable();
   }
 }
+
+
+interface IXSetter {
+  x: number;
+  y?: number;
+  z?: number;
+}
+
+interface IYSetter {
+  x?: number;
+  y: number;
+  z?: number;
+}
+
+export type VectorSetter = IXSetter | IYSetter;

@@ -1,47 +1,52 @@
 import { degreesToRadians, round } from './helpers';
-import { IVector } from './vector';
+import { IVector, VectorSetter } from './vector';
 
 
 export interface IVector3D extends IVector {
   readonly z: number;
 
-  is(x: number, y: number, z?: number): boolean;
-  isEqual(vector: IVector3D): boolean;
-  add(x: number, y?: number, z?: number): IVector3D;
-  sustract(x: number, y?: number, z?: number): IVector3D;
-  multiply(x: number, y?: number, z?: number): IVector3D;
-  divide(x: number, y?: number, z?: number): IVector3D;
-  merge(other: IVector3D): IVector3D;
-  diff(other: IVector3D): IVector3D;
-  round(): IVector3D;
-  abs(): IVector3D;
-  apply(operation: (value: number) => number): IVector3D;
+  is({ x, y, z }: Vector3DSetter): boolean;
+  set({ x, y, z }: Vector3DSetter): IVector3D;
+  add({ x, y, z }: Vector3DSetter): IVector3D;
+  sustract({ x, y, z }: Vector3DSetter): IVector3D;
+  multiply({ x, y, z }: Vector3DSetter): IVector3D;
+  divide({ x, y, z }: Vector3DSetter): IVector3D;
+
+  isValue(x: number, y?: number, z?: number): boolean;
+  setValue(x: number, y?: number, z?: number): IVector3D;
+  addValue(x: number, y?: number, z?: number): IVector3D;
+  sustractValue(x: number, y?: number, z?: number): IVector3D;
+  multiplyValue(x: number, y?: number, z?: number): IVector3D;
+  divideValue(x: number, y?: number, z?: number): IVector3D;
+
+  apply(operation: (coord: number) => number): IVector3D;
+
   clone(): IVector3D;
-  toMutable(): MutableVector3D;
-  toImmutable(): Vector3D;
+  toImmutable(): IVector3D;
+  toMutable(): IVector3D;
 }
 
 
 abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
   static readonly round = round;
 
-  static *iterate(vectorA: IVector3D, vectorB = new Vector3D(0, 0, 0)) {
-    const start = new Vector3D(
-      Math.min(vectorA.x, vectorB.x),
-      Math.min(vectorA.y, vectorB.y),
-      Math.min(vectorA.z, vectorB.z),
-    );
-    const end = new Vector3D(
-      Math.max(vectorA.x, vectorB.x),
-      Math.max(vectorA.y, vectorB.y),
-      Math.max(vectorA.z, vectorB.z),
-    );
+  static *iterate(vectorA: IVector3D, vectorB: IVector3D = new Vector3D(0, 0, 0)) {
+    const start = this.apply(Math.min, vectorA, vectorB);
+    const end = this.apply(Math.max, vectorA, vectorB);
     const current = new MutableVector3D(0, 0, 0);
 
     for (current.z = start.z; current.z < end.z; current.z++)
       for (current.y = start.y; current.y < end.y; current.y++)
         for (current.x = start.x; current.x < end.x; current.x++)
           yield current.toImmutable();
+  }
+
+  static apply(action: (...values: number[]) => number, ...vectors: IVector3D[]) {
+    return new Vector3D(
+      action(...vectors.map(vector => vector.x)),
+      action(...vectors.map(vector => vector.y)),
+      action(...vectors.map(vector => vector.z)),
+    );
   }
 
   static fromMagnitude(value: number): BaseVector3D<IVector3D> {
@@ -115,67 +120,68 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
   }
 
 
-  toJSON(): string {
-    return `{x:${this.x},y:${this.y},z:${this.z}}`;
+  is({ x = this.x, y = this.y, z = this.z }: Vector3DSetter): boolean {
+    return this.x === x && this.y === y && this.z === z;
+  }
+  isValue(x: number, y = x, z = y): boolean {
+    return this.x === x && this.y === y && this.z === z;
+  }
+
+  set({ x = this.x, y = this.y, z = this.z }: Vector3DSetter): T {
+    return this.setValue(x, y, z);
+  }
+  abstract setValue(x: number, y?: number, z?: number): T;
+
+  add({ x = 0, y = 0, z = 0 }: Vector3DSetter): T {
+    return this.setValue(this.x + x, this.y + y, this.z + z);
+  }
+  addValue(x: number, y = x, z = y): T {
+    return this.setValue(this.x + x, this.y + y, this.z + z);
+  }
+
+  sustract({ x = 0, y = 0, z = 0 }: Vector3DSetter): T {
+    return this.setValue(this.x - x, this.y - y, this.z - z);
+  }
+  sustractValue(x: number, y = x, z = y): T {
+    return this.setValue(this.x - x, this.y - y, this.z - z);
+  }
+
+  multiply({ x = 1, y = 1, z = 1 }: Vector3DSetter): T {
+    return this.setValue(this.x * x, this.y * y, this.z * z);
+  }
+  multiplyValue(x: number, y = x, z = y): T {
+    return this.setValue(this.x * x, this.y * y, this.z * z);
+  }
+
+  divide({ x = 1, y = 1, z = 1 }: Vector3DSetter): T {
+    return this.setValue(this.x / x, this.y / y, this.z / z);
+  }
+  divideValue(x: number, y = x, z = y): T {
+    return this.setValue(this.x / x, this.y / y, this.z / z);
+  }
+
+
+  apply(operation: (coord: number) => number): T {
+    return this.setValue(operation(this.x), operation(this.y), operation(this.z));
+  }
+
+  abstract clone(): T;
+  toImmutable(): Vector3D {
+    return new Vector3D(this.x, this.y, this.z);
+  }
+  toMutable(): MutableVector3D {
+    return new MutableVector3D(this.x, this.y, this.z);
   }
 
   toString(): string {
     return `[Vector3D(${this.x},${this.y},${this.z})]`;
   }
-
   toArray(): number[] {
     return [ this.x, this.y, this.z ];
   }
-
-
-  is(x: number, y: number, z?: number): boolean {
-    return this.x === x && this.y === y && this.z === z;
+  toJSON(): string {
+    return `{x:${this.x},y:${this.y},z:${this.z}}`;
   }
-
-  isEqual(vector: IVector3D): boolean {
-    return this.x === vector.x && this.y === vector.y && this.z === vector.z;
-  }
-
-  add(x: number, y: number = x, z: number = x): T {
-    return this.set(this.x + x, this.y + y, this.z + z);
-  }
-
-  sustract(x: number, y: number = x, z: number = x): T {
-    return this.set(this.x - x, this.y - y, this.z - z);
-  }
-
-  multiply(x: number, y: number = x, z: number = x): T {
-    return this.set(this.x * x, this.y * y, this.z * z);
-  }
-
-  divide(x: number, y: number = x, z: number = x): T {
-    return this.set(this.x / x, this.y / y, this.z / z);
-  }
-
-  merge(other: IVector3D): T {
-    return this.set(this.x + other.x, this.y + other.y, this.z + other.z);
-  }
-
-  diff(other: IVector3D): T {
-    return this.set(this.x - other.x, this.y - other.y, this.z - other.z);
-  }
-
-  round(): T {
-    return this.apply(round);
-  }
-
-  abs(): T {
-    return this.apply(Math.abs);
-  }
-
-  apply(operation: (value: number) => number): T {
-    return this.set(operation(this.x), operation(this.y), operation(this.z));
-  }
-
-  abstract clone(): T;
-  abstract toImmutable(): Vector3D;
-  abstract toMutable(): MutableVector3D;
-  protected abstract set(x: number, y: number, z: number): T;
 }
 
 
@@ -189,20 +195,12 @@ export class Vector3D extends BaseVector3D<Vector3D> implements IVector3D {
   static MAX = new Vector3D(Infinity, Infinity, Infinity);
 
   // tslint:disable-next-line:prefer-function-over-method
-  protected set(x: number, y: number, z: number): Vector3D {
+  setValue(x: number, y = x, z = y): Vector3D {
     return new Vector3D(x, y, z);
   }
 
   clone() {
     return new Vector3D(this.x, this.y, this.z);
-  }
-
-  toImmutable(): Vector3D {
-    return this;
-  }
-
-  toMutable(): MutableVector3D {
-    return new MutableVector3D(this.x, this.y, this.z);
   }
 }
 
@@ -213,7 +211,7 @@ export class MutableVector3D extends BaseVector3D<MutableVector3D> implements IV
   z: number;
 
 
-  protected set(x: number, y: number, z: number): this {
+  setValue(x: number, y = x, z = y): this {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -223,12 +221,13 @@ export class MutableVector3D extends BaseVector3D<MutableVector3D> implements IV
   clone() {
     return new MutableVector3D(this.x, this.y, this.z);
   }
-
-  toImmutable(): Vector3D {
-    return new Vector3D(this.x, this.y, this.z);
-  }
-
-  toMutable(): MutableVector3D {
-    return this.clone();
-  }
 }
+
+
+interface IZSetter {
+  x?: number;
+  y?: number;
+  z: number;
+}
+
+type Vector3DSetter = VectorSetter | IZSetter;
