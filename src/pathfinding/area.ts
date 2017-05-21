@@ -70,16 +70,16 @@ export class Area<T extends INode> {
     if (node.isObstacle)
       return [];
 
-    const neighbors = this.getLayerNeighbors(node).map(neighbor => {
+    const layerNeighbors = this.getLayerNeighbors(node);
+
+    const neighbors = layerNeighbors.map(neighbor => {
       if (!neighbor.isEmpty)
         return neighbor;
 
       const locationBelow = neighbor.location.sustract({ z: 1 });
       const below = this.get(locationBelow);
-
-      if (below.canTravelUp)
-        return below;
-    });
+      return below.canTravelUp ? below : null;
+    }).filter(Boolean);
 
     if (node.canTravelUp) {
       const locationAbove = node.location.add({ z: 1 });

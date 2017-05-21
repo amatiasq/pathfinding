@@ -63,13 +63,13 @@ describe('Matrix component', () => {
     runs.forEach(testIndexGetterAsVector);
     runs.forEach(testAssignementAsVector);
 
-    testReturnsUndefined('any bigger combination', [
+    testReturnsNull('any bigger combination', [
       [ 1, 2 ],
       [ 2, 1 ],
       [ 2, 2 ],
     ]);
 
-    testReturnsUndefined('negative indexes', [
+    testReturnsNull('negative indexes', [
       [ 0, -1 ],
       [ -1, 0 ],
       [ -1, -1 ],
@@ -101,7 +101,7 @@ describe('Matrix component', () => {
     runs.forEach(testIndexGetterAsVector);
     runs.forEach(testAssignementAsVector);
 
-    testReturnsUndefined('any bigger combination', [
+    testReturnsNull('any bigger combination', [
       [ 1, 1, 2 ],
       [ 1, 2, 1 ],
       [ 1, 2, 2 ],
@@ -110,7 +110,7 @@ describe('Matrix component', () => {
       [ 2, 2, 2 ],
     ]);
 
-    testReturnsUndefined('negative indexes', [
+    testReturnsNull('negative indexes', [
       [ 0, 0, -1 ],
       [ 0, -1, 0 ],
       [ 0, -1, -1 ],
@@ -146,7 +146,26 @@ describe('Matrix component', () => {
     it('should accept a size restriction', () => {
       const child = sut.getRange([ 1, 1 ], [ 2, 2 ]);
       assert.deepEqual(child.shape, [ 2, 2 ]);
-      assert.isUndefined(child.get(2, 2));
+      assert.isNull(child.get(2, 2));
+    });
+  });
+
+
+  describe('bug check', () => {
+    it('should return null when getting items out of range', () => {
+      const data = makeData(4);
+      const sut = makeVectorMatrix(data, new Vector3D(2, 1, 2));
+
+      assert.isNull(sut.getVector(new Vector3D(0, 1, 0)));
+      assert.isNull(sut.getVector(new Vector3D(1, 1, 0)));
+    });
+
+
+    it('should throw when trying to set items out of range', () => {
+      const data = makeData(4);
+      const sut = makeVectorMatrix(data, new Vector3D(2, 1, 2));
+
+      assert.throws(() => sut.setVector(null, new Vector3D(1, 1, 1)));
     });
   });
 
@@ -202,9 +221,9 @@ describe('Matrix component', () => {
     });
   }
 
-  function testReturnsUndefined(reason: string, cases: number[][]) {
-    it(`should return undefined for ${reason}`, () => {
-      cases.forEach(coords => assert.isUndefined(sut.get(...coords)));
+  function testReturnsNull(reason: string, cases: number[][]) {
+    it(`should return null for ${reason}`, () => {
+      cases.forEach(coords => assert.isNull(sut.get(...coords)));
     });
   }
 });

@@ -175,6 +175,32 @@ describe('Area class', () => {
       assert.isArray(neighbors);
       assert.equal(neighbors.length, 0);
     });
+
+
+    it('should return the node below if node is empty and node below has a ramp', () => {
+      const target = new Vector3D(1, 0, 1);
+      const below = new Vector3D(0, 0, 0);
+      const sut = makeArea(new Vector3D(2, 1, 2));
+
+      sut.get(below).canTravelUp = true;
+      sut.get(new Vector3D(0, 0, 1)).isEmpty = true;
+      const neighbors = sut.getNeighbors(sut.get(target));
+
+      assert.include(neighbors, sut.get(below));
+    });
+
+
+    it('should return no neighbors if neighbor is empty and node below does not have a ramp', () => {
+      const target = new Vector3D(1, 0, 1);
+      const below = new Vector3D(0, 0, 0);
+      const sut = makeArea(new Vector3D(2, 1, 2));
+
+      sut.get(new Vector3D(0, 0, 1)).isEmpty = true;
+      const neighbors = sut.getNeighbors(sut.get(target));
+
+      assert.isArray(neighbors);
+      assert.equal(neighbors.length, 0);
+    });
   });
 
 

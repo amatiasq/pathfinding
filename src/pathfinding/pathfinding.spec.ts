@@ -83,7 +83,7 @@ describe('Pathfinding module', () => {
   it('should return null if there is no route without obstacles', () => {
     const origin = new Vector3D(0, 0, 0);
     const destination = origin.add({ x: 2 });
-    const { path } = calculatePath(origin, destination, [], {
+    const { path } = calculatePath(origin, destination, null, {
       modifier(world) {
         world.get(origin.add({ x: 1 })).isObstacle = true;
       },
@@ -112,10 +112,58 @@ describe('Pathfinding module', () => {
   });
 
 
-  it('should be able to travel up and down if node below has a ramp and node above is empty');
-  it('should not travel up and down between neighbors if node below has no ramp');
-  it('should not travel up and down between neighbors if node above is not empty');
-  it('should consider layer change as expensive as designed in LAYER_CHANGE_COST parameter');
+  it('should be able to travel up if node below has a ramp and node above is empty', () => {
+    const origin = new Vector3D(0, 0, 0);
+    const destination = origin.add({ x: 1, z: 1 });
+    const { path, expected } = calculatePath(origin, destination, [ destination ], {
+      modifier(world) {
+        world.get(origin).canTravelUp = true;
+        world.get(origin.add({ z: 1 })).isEmpty = true;
+      },
+    });
+
+    assert.deepEqual(path, expected);
+  });
+
+
+  it('should be able to travel diwn if node is empty and node above has a ramp', () => {
+    const origin = new Vector3D(1, 0, 1);
+    const destination = origin.sustract({ x: 1, z: 1 });
+    const { path, expected } = calculatePath(origin, destination, [ destination ], {
+      modifier(world) {
+        world.get(destination).canTravelUp = true;
+        world.get(destination.add({ z: 1 })).isEmpty = true;
+      },
+    });
+
+    assert.deepEqual(path, expected);
+  });
+
+
+  it('should not travel up and down between neighbors if node below has no ramp', () => {
+    const origin = new Vector3D(0, 0, 0);
+    const destination = origin.add({ x: 1, z: 1 });
+    const { path, expected } = calculatePath(origin, destination, null, {
+      modifier(world) {
+        world.get(origin.add({ z: 1 })).isEmpty = true;
+      },
+    });
+
+    assert.isNull(path);
+  });
+
+
+  it('should not travel up and down between neighbors if node above is not empty', () => {
+    const origin = new Vector3D(1, 0, 1);
+    const destination = origin.sustract({ x: 1, z: 1 });
+    const { path, expected } = calculatePath(origin, destination, null, {
+      modifier(world) {
+        world.get(destination).canTravelUp = true;
+      },
+    });
+
+    assert.isNull(path);
+  });
 
 
   function calculatePath(
@@ -136,13 +184,12 @@ describe('Pathfinding module', () => {
     const sut = new Pathfinding(world, algorithm);
     const origin = world.get(originLocation);
     const destination = world.get(destinationLocation);
-    const expected = expectedPath.map(location => world.get(location));
+    const expected = expectedPath ? expectedPath.map(location => world.get(location)) : null;
 
     if (modifier)
       modifier(world);
 
     const path = sut.resolve(origin, destination);
-
     return { world, sut, origin, destination, path, expected };
   }
 });

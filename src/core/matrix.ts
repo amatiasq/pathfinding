@@ -21,12 +21,16 @@ export class Matrix<T> {
 
   get(...coords: number[]): T {
     const index = this.getIndex(coords);
-    return this.data[index];
+    return this.data[index] || null;
   }
 
 
   set(value: T, ...coords: number[]): T {
     const index = this.getIndex(coords);
+
+    if (index == null)
+      throw new Error('Index out of range');
+
     this.data[index] = value;
     return value;
   }
@@ -61,8 +65,12 @@ export class Matrix<T> {
     this.checkDimensions(coords);
     let index = 0;
 
-    for (let i = 0; i < coords.length; i++)
+    for (let i = 0; i < coords.length; i++) {
+      if (coords[i] >= this.shape[i])
+        return null;
+
       index += coords[i] * this.operator[i];
+    }
 
     return index;
   }
