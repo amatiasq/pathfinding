@@ -6,10 +6,10 @@ const WATCH = !IS_CI && Boolean(process.env.WATCH);
 const baseConfig = {
   basePath: '',
   frameworks: ['mocha', 'chai', 'sinon'],
-  files: ['src/**/*.spec.ts'],
+  files: ['../src/**/*.spec.ts'],
 
   preprocessors: {
-    'src/**/*.ts': ['webpack']
+    '../src/**/*.ts': ['webpack']
   },
 
   webpack: {

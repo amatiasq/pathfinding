@@ -1,12 +1,16 @@
 module.exports = {
   devtool: 'source-map',
-  entry: './src/app.ts',
+  entry: '../src/main.ts',
+  bail: true,
+
   output: {
-    filename: 'dist/bundle.js'
+    filename: '../dist/bundle.js'
   },
+
   resolve: {
     extensions: ['.ts', '.js']
   },
+
   module: {
     loaders: [
       {

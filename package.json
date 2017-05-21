@@ -15,7 +15,6 @@
     "karma": "^1.6.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.1.0",
-    "karma-firefox-launcher": "^1.0.1",
     "karma-mocha": "^1.3.0",
     "karma-mocha-reporter": "^2.2.3",
     "karma-sinon": "^1.0.5",
@@ -30,9 +29,10 @@
     "webpack": "^2.4.1"
   },
   "scripts": {
-    "test": "karma start",
-    "test:ci": "TRAVIS=true karma start",
-    "test:watch": "WATCH=true karma start"
+    "test": "karma start ./config/karma.conf.js",
+    "test:ci": "TRAVIS=true karma start ./config/karma.conf.js",
+    "test:watch": "WATCH=true karma start ./config/karma.conf.js",
+    "build": "cd config; webpack --config ./webpack.config.js"
   },
   "author": "",
   "license": "ISC"
