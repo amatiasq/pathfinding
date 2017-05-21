@@ -21,10 +21,10 @@ describe('Area class', () => {
 
   it('should return the node created by nodeCreator at the giving coordinates', () => {
     const sut = makeArea();
-    assert.deepPropertyVal(sut.get(new Vector3D(0, 0, 0)), 'value', 0);
-    assert.deepPropertyVal(sut.get(new Vector3D(1, 0, 0)), 'value', 1);
-    assert.deepPropertyVal(sut.get(new Vector3D(1, 1, 0)), 'value', 3);
-    assert.deepPropertyVal(sut.get(new Vector3D(1, 1, 1)), 'value', 7);
+    assert.deepPropertyVal(sut.get(new Vector3D(0, 0, 0)), 'index', 0);
+    assert.deepPropertyVal(sut.get(new Vector3D(1, 0, 0)), 'index', 1);
+    assert.deepPropertyVal(sut.get(new Vector3D(1, 1, 0)), 'index', 3);
+    assert.deepPropertyVal(sut.get(new Vector3D(1, 1, 1)), 'index', 7);
   });
 
 
@@ -95,33 +95,26 @@ describe('Area class', () => {
 
   function makeArea(
     dataSize: Vector3D = new Vector3D(2, 2, 2),
-    nodeCreator: NodeCreator<INode, number> = defaultNodeCreator,
+    nodeCreator: NodeCreator<INode> = defaultNodeCreator,
   ) {
-    const list = [];
-    const size = dataSize.z * dataSize.y * dataSize.x;
-
-    for (let i = 0; i < size; i++)
-      list.push(i);
-
-    const data = new VectorMatrix(list, dataSize);
-    return new Area<INode, number>(data, nodeCreator);
+    return new Area<INode>(dataSize, nodeCreator);
   }
 
 
-  function obstacleCreator(filter: (location: Vector3D) => boolean): NodeCreator<INode, number> {
-    return (value: number, location: Vector3D): IMockNode => {
+  function obstacleCreator(filter: (location: Vector3D) => boolean): NodeCreator<INode> {
+    let index = 0;
+
+    return (location: Vector3D): IMockNode => {
       return {
         isObstacle: filter(location),
-        canTravelUp: false,
-        isEmpty: false,
         location,
-        value,
+        index: index++,
       };
     };
   }
 
 
   interface IMockNode extends INode {
-    value: number;
+    index: number;
   }
 });

@@ -4,24 +4,25 @@ import { IVector3D, Vector3D } from '../core/vector3d';
 import { INode } from './node';
 
 
-export class Area<T extends INode, U> {
+export class Area<T extends INode> {
   private tiles: VectorMatrix<T, IVector3D>;
 
 
-  constructor(data: VectorMatrix<U, IVector3D>, nodeCreator: NodeCreator<T, U>) {
-    this.tiles = new VectorMatrix([] as T[], data.size);
-
-
-    for (let i = 0; i < data.size.x; i++) {
-      for (let j = 0; j < data.size.y; j++) {
-        for (let k = 0; k < data.size.z; k++) {
-          const location = new Vector3D(i, j, k);
-          const node = nodeCreator(data.getVector(location), location);
-          this.tiles.setVector(node, location);
-        }
-      }
+  constructor(data: VectorMatrix<T, IVector3D>);
+  constructor(size: Vector3D, creator: NodeCreator<T>);
+  constructor(_: VectorMatrix<T, IVector3D> | IVector3D, creator?: NodeCreator<T>) {
+    if (_ instanceof VectorMatrix) {
+      this.tiles = _;
+      return;
     }
+
+    const size = _;
+    this.tiles = new VectorMatrix([] as T[], size);
+
+    for (const index of Vector3D.iterate(size))
+      this.tiles.setVector(creator(index), index);
   }
+
 
   get(location: IVector3D): T {
     return this.tiles.getVector(location);
@@ -76,4 +77,4 @@ export class Area<T extends INode, U> {
 }
 
 
-export type NodeCreator<T, U> = (value: U, location: Vector3D) => T;
+export type NodeCreator<T> = (location: Vector3D) => T;

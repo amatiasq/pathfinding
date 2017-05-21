@@ -16,11 +16,33 @@ export interface IVector3D extends IVector {
   round(): IVector3D;
   abs(): IVector3D;
   apply(operation: (value: number) => number): IVector3D;
+  clone(): IVector3D;
+  toMutable(): MutableVector3D;
+  toImmutable(): Vector3D;
 }
 
 
 abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
   static readonly round = round;
+
+  static *iterate(vectorA: IVector3D, vectorB = new Vector3D(0, 0, 0)) {
+    const start = new Vector3D(
+      Math.min(vectorA.x, vectorB.x),
+      Math.min(vectorA.y, vectorB.y),
+      Math.min(vectorA.z, vectorB.z),
+    );
+    const end = new Vector3D(
+      Math.max(vectorA.x, vectorB.x),
+      Math.max(vectorA.y, vectorB.y),
+      Math.max(vectorA.z, vectorB.z),
+    );
+    const current = new MutableVector3D(0, 0, 0);
+
+    for (current.z = start.z; current.z < end.z; current.z++)
+      for (current.y = start.y; current.y < end.y; current.y++)
+        for (current.x = start.x; current.x < end.x; current.x++)
+          yield current.toImmutable();
+  }
 
   static fromMagnitude(value: number): BaseVector3D<IVector3D> {
     return this.construct(value, 0, 0);

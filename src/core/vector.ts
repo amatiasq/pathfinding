@@ -36,6 +36,16 @@ export interface IVector {
 abstract class BaseVector<T extends IVector> implements IVector {
   static readonly round = round;
 
+  static *iterate(vectorA: IVector, vectorB = new Vector(0, 0)) {
+    const start = new Vector(Math.min(vectorA.x, vectorB.x), Math.min(vectorA.y, vectorB.y));
+    const end = new Vector(Math.max(vectorA.x, vectorB.x), Math.max(vectorA.y, vectorB.y));
+    const current = start.toMutable() as MutableVector;
+
+    for (current.y = start.y; current.y < end.y; current.y++)
+      for (current.x = start.x; current.x < end.x; current.x++)
+        yield current.toImmutable();
+  }
+
   static fromRadians(radians: number): BaseVector<IVector> {
     return this.construct(Math.cos(radians), Math.sin(radians));
   }

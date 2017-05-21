@@ -1,17 +1,23 @@
 /*
+import { VectorMatrix } from '../core/matrix';
+import { Vector3D } from '../core/vector3d';
+import { Area } from './area';
+import { INode } from './node';
 import { Pathfinding } from './pathfinding';
 
 describe('Pathfinding module', () => {
   let sut: Pathfinding;
-  let world: Area;
+  let world: Area<INode, number>;
 
   beforeEach(() => {
-    sut = new Pathfinding();
-    world = new Area();
   });
 
   it('should return empty array if origin and destination nodes are the same', () => {
-    const origin = world.get(0, 0, 0);
+    sut = new Pathfinding();
+    world = new Area(new Vector(1, 1, 1), location => ({ location }));
+
+
+    const origin = world.get(new Vector3D(0, 0, 0));
     const destination = origin;
     sut.getPath(origin, destination);
   });
@@ -26,5 +32,4 @@ describe('Pathfinding module', () => {
   it('should not travel up and down between neighbors if node above is not empty');
   it('should consider layer change as expensive as designed in LAYER_CHANGE_COST parameter');
 });
-
-/**/
+*/
