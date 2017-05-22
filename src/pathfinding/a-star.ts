@@ -37,7 +37,7 @@ export class AStar<T extends INode> {
         return this.retrace(start, current);
 
       for (const child of area.getNeighbors(current.child)) {
-        const neighbor = this.pool.getNode(child as T);
+        const neighbor = this.pool.getNode(child);
         const cost = this.getNeighborCost(current.child, child);
         const movement = (current.pathCost || 0) + cost;
 
@@ -175,11 +175,6 @@ class AStarNodePool<T extends INode> {
   }
 
   dispose(node: AStarNodeContainer<T>) {
-    if (Array.isArray(node)) {
-      node.forEach(entry => this.dispose(entry));
-      return;
-    }
-
     this.using.delete(node);
     node.dispose();
   }

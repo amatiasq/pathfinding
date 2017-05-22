@@ -1,4 +1,4 @@
-import { degreesToRadians, round } from './helpers';
+import { round } from './helpers';
 import { IVector, VectorSetter, VectorTest } from './vector';
 
 

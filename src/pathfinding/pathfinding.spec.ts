@@ -143,7 +143,7 @@ describe('Pathfinding module', () => {
   it('should not travel up and down between neighbors if node below has no ramp', () => {
     const origin = new Vector3D(0, 0, 0);
     const destination = origin.add({ x: 1, z: 1 });
-    const { path, expected } = calculatePath(origin, destination, null, {
+    const { path } = calculatePath(origin, destination, null, {
       modifier(world) {
         world.get(origin.add({ z: 1 })).isEmpty = true;
       },
@@ -156,7 +156,7 @@ describe('Pathfinding module', () => {
   it('should not travel up and down between neighbors if node above is not empty', () => {
     const origin = new Vector3D(1, 0, 1);
     const destination = origin.sustract({ x: 1, z: 1 });
-    const { path, expected } = calculatePath(origin, destination, null, {
+    const { path } = calculatePath(origin, destination, null, {
       modifier(world) {
         world.get(destination).canTravelUp = true;
       },

@@ -46,7 +46,7 @@ abstract class BaseVector<T extends IVector> implements IVector {
   static *iterate(vectorA: IVector, vectorB: IVector = new Vector(0, 0)) {
     const start = this.apply(Math.min, vectorA, vectorB);
     const end = this.apply(Math.max, vectorA, vectorB);
-    const current = start.toMutable() as MutableVector;
+    const current = start.toMutable();
 
     for (current.y = start.y; current.y < end.y; current.y++)
       for (current.x = start.x; current.x < end.x; current.x++)

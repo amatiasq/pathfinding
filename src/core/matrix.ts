@@ -28,6 +28,7 @@ export class Matrix<T> {
   set(value: T, ...coords: number[]): T {
     const index = this.getIndex(coords);
 
+    // tslint:disable-next-line:strict-type-predicates
     if (index == null)
       throw new Error('Index out of range');
 

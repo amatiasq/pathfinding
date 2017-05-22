@@ -170,7 +170,7 @@ describe('Matrix component', () => {
   });
 
 
-  function makeVectorMatrix<T, U>(data: T[], dimensions: IVector) {
+  function makeVectorMatrix<T>(data: T[], dimensions: IVector) {
     return new VectorMatrix(data, dimensions);
   }
 

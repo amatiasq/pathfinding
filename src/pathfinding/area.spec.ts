@@ -16,7 +16,7 @@ describe('Area class', () => {
     const spy = sinon.spy();
     const dataSize = new Vector3D(2, 2, 2);
     const size = dataSize.z * dataSize.y * dataSize.x;
-    const sut = makeArea(dataSize, spy);
+    makeArea(dataSize, spy);
     assert.equal(spy.callCount, size);
   });
 
@@ -192,7 +192,6 @@ describe('Area class', () => {
 
     it('should return no neighbors if neighbor is empty and node below does not have a ramp', () => {
       const target = new Vector3D(1, 0, 1);
-      const below = new Vector3D(0, 0, 0);
       const sut = makeArea(new Vector3D(2, 1, 2));
 
       sut.get(new Vector3D(0, 0, 1)).isEmpty = true;
