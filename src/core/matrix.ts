@@ -81,6 +81,11 @@ export class Matrix<T> {
     if (array.length !== this.shape.length)
       throw new Error(`${this.shape.length} dimensions are required but ${array.length} provided`);
   }
+
+
+  toArray() {
+    return this.data.slice();
+  }
 }
 
 

@@ -253,6 +253,27 @@ describe('Area class', () => {
   });
 
 
+  describe('#toArray method', () => {
+    it('should return all tiles in the area', () => {
+      const size = new Vector3D(2, 2, 2);
+      const sut = makeArea(size);
+      const array = sut.toArray();
+
+      assert.equal(array.length, size.x * size.y * size.z);
+
+      for (const index of Vector3D.iterate(size))
+        assert.include(array, sut.get(index));
+    });
+
+
+    it('should return empty array if area has no tile', () => {
+      const sut = makeArea(new Vector3D(0, 0, 0));
+      const array = sut.toArray();
+      assert.equal(array.length, 0);
+    });
+  });
+
+
   function makeArea(dataSize = new Vector3D(2, 2, 2), nodeCreator = defaultNodeCreator) {
     return new Area<INode>(dataSize, nodeCreator);
   }

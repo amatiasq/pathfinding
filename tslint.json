@@ -76,7 +76,7 @@
     "restrict-plus-operands": true,
     "strict-boolean-expressions": false,
     "strict-type-predicates": true,
-    "switch-default": true,
+    "switch-default": false,
     "triple-equals": [true, "allow-null-check"],
     "typeof-compare": true,
     "use-isnan": true,

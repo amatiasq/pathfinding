@@ -3,11 +3,12 @@
 
 import { Area } from './area';
 import { INode } from './node';
+import { IPathfindingAlgorithm } from './pathfinding';
 
 const DEBUG = true;
 
 
-export class AStar<T extends INode> {
+export class AStar<T extends INode> implements IPathfindingAlgorithm<T> {
   private pool: AStarNodePool<T>;
   private getNeighborCost: DistanceCalculator<T>;
   private estimateDistance: DistanceCalculator<T>;
@@ -20,7 +21,7 @@ export class AStar<T extends INode> {
   }
 
 
-  getPath(start: T, end: T, area: Area<T>): T[] {
+  resolve(start: T, end: T, area: Area<T>): T[] {
     if (start === end)
       return [];
 

@@ -114,6 +114,11 @@ export class Area<T extends INode> {
 
     return neighbors;
   }
+
+
+  toArray() {
+    return this.tiles.toArray();
+  }
 }
 
 

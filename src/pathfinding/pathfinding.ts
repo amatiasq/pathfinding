@@ -12,11 +12,11 @@ export class Pathfinding<T extends ITile> {
 
 
   resolve(origin: T, destination: T): T[] {
-    return this.algorithm.getPath(origin, destination, this.world) || null;
+    return this.algorithm.resolve(origin, destination, this.world) || null;
   }
 }
 
 
 export interface IPathfindingAlgorithm<T extends INode> {
-  getPath(origin: T, destination: T, area?: Area<T>): T[];
+  resolve(origin: T, destination: T, area?: Area<T>): T[];
 }

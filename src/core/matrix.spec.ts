@@ -120,6 +120,7 @@ describe('Matrix component', () => {
     ]);
   });
 
+
   describe('I should be able to get a subsection of the matrix', () => {
     beforeEach(() => {
       const DIMENSION_SIZE = 4;
@@ -147,6 +148,28 @@ describe('Matrix component', () => {
       const child = sut.getRange([ 1, 1 ], [ 2, 2 ]);
       assert.deepEqual(child.shape, [ 2, 2 ]);
       assert.isNull(child.get(2, 2));
+    });
+  });
+
+
+  describe('#toArray method', () => {
+    it('should return all tiles in the area', () => {
+      const dimensions = new Vector(2, 2);
+      const size = dimensions.x * dimensions.y;
+      const data = makeData(4);
+      const sut = makeVectorMatrix(data, dimensions);
+      const array = sut.toArray();
+
+      assert.equal(array.length, size);
+      for (const index of Vector.iterate(dimensions))
+        assert.include(array, sut.getVector(index));
+    });
+
+
+    it('should return empty array if area has no tile', () => {
+      const sut = makeMatrix([], [ 0, 0 ]);
+      const array = sut.toArray();
+      assert.equal(array.length, 0);
     });
   });
 
