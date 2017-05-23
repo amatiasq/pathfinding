@@ -2,7 +2,6 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { VectorMatrix } from '../core/matrix';
 import { Vector3D } from '../core/vector3d';
 import { Area, NodeCreator } from './area';
 import { INode } from './node';

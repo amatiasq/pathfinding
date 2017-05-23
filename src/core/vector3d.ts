@@ -88,7 +88,7 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
   private static construct(x: number, y: number, z: number): BaseVector3D<IVector3D> {
     // We need to use any because it's going to be a subclass and we can't use
     //   BaseVector3D because it's abstract
-    // tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any no-unsafe-any
     return new (this as any)(x, y, z);
   }
 

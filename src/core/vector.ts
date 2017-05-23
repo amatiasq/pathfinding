@@ -110,7 +110,7 @@ abstract class BaseVector<T extends IVector> implements IVector {
   private static construct(x: number, y: number): BaseVector<IVector> {
     // We need to use any because it's going to be a subclass and we can't use
     //   BaseVector because it's abstract
-    // tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any no-unsafe-any
     return new (this as any)(x, y);
   }
 
