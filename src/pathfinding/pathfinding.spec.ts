@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { Vector3D } from '../core/vector3d';
 import { AStar } from './a-star';
 import { Area } from './area';
@@ -35,8 +34,8 @@ describe('Pathfinding module', () => {
     const origin = new Vector3D(0, 0, 0);
     const { path } = calculatePath(origin, origin, []);
 
-    assert.isArray(path);
-    assert.equal(path.length, 0);
+    expect(path).toBeInstanceOf(Array);
+    expect(path.length).toBe(0);
   });
 
 
@@ -45,7 +44,7 @@ describe('Pathfinding module', () => {
     const destination = origin.add({ x: 1 });
     const { path, expected } = calculatePath(origin, destination, [ destination ]);
 
-    assert.deepEqual(path[0], expected[0]);
+    expect(path[0]).toEqual(expected[0]);
   });
 
 
@@ -59,7 +58,7 @@ describe('Pathfinding module', () => {
       worldSize: new Vector3D(3, 2, 1),
     });
 
-    assert.deepEqual(path, expected);
+    expect(path).toEqual(expected);
   });
 
 
@@ -76,7 +75,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.deepEqual(path, expected);
+    expect(path).toEqual(expected);
   });
 
 
@@ -89,7 +88,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.isNull(path);
+    expect(path).toBeNull();
   });
 
 
@@ -108,7 +107,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.deepEqual(path, expected);
+    expect(path).toEqual(expected);
   });
 
 
@@ -122,7 +121,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.deepEqual(path, expected);
+    expect(path).toEqual(expected);
   });
 
 
@@ -136,7 +135,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.deepEqual(path, expected);
+    expect(path).toEqual(expected);
   });
 
 
@@ -149,7 +148,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.isNull(path);
+    expect(path).toBeNull();
   });
 
 
@@ -162,7 +161,7 @@ describe('Pathfinding module', () => {
       },
     });
 
-    assert.isNull(path);
+    expect(path).toBeNull();
   });
 
 

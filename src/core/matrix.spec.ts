@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { Matrix, VectorMatrix } from './matrix';
 import { IVector, Vector } from './vector';
 import { Vector3D } from './vector3d';
@@ -15,31 +14,30 @@ describe('Matrix component', () => {
 
   it('should throw if we ask for less dimensions than we have', () => {
     sut = makeMatrix([], [ 2, 2 ]);
-    assert.throws(() => sut.get(1));
+    expect(() => sut.get(1)).toThrowError();
   });
 
   it('should throw if we ask for more dimensions than we have', () => {
     sut = makeMatrix([], [ 2, 2 ]);
-    assert.throws(() => sut.get(1, 1, 1));
+    expect(() => sut.get(1, 1, 1)).toThrowError();
   });
 
   it('should have a shape property which returns the size of the matrix', () => {
     sut = makeMatrix([], [ 2, 2 ]);
-    const expected = [ 2, 2 ];
-    assert.deepEqual<number[]>(sut.shape, expected);
+    expect(sut.shape).toEqual([ 2, 2 ]);
   });
 
   it('should have a size property which returns the size of the matrix', () => {
     const size = new Vector3D(2, 2, 2);
     vectorSut = makeVectorMatrix([], size);
-    assert.instanceOf(vectorSut.size, Vector3D);
-    assert.deepEqual(vectorSut.size, size);
+    expect(vectorSut.size).toBeInstanceOf(Vector3D);
+    expect(vectorSut.size).toEqual(size);
   });
 
   it.skip('should return null if one of the values is negative', () => {
     // TODO: Negative values might return last indexes
     sut = makeMatrix([ { value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }], [ 2, 2 ]);
-    assert.isUndefined(sut.get(1, -1));
+    expect(sut.get(1, -1)).toBeUndefined();
   });
 
 
@@ -130,24 +128,19 @@ describe('Matrix component', () => {
 
     it('should index from the subsection', () => {
       const child = sut.getRange([ 1, 1 ]);
-      assert.equal(child.get(0, 0), sut.get(1, 1));
-    });
-
-    it('should automatically reduce the shape of the new matrix', () => {
-      const child = sut.getRange([ 1, 1 ]);
-      assert.deepEqual(child.shape, [ 3, 3 ]);
+      expect(child.shape).toEqual([ 3, 3 ]);
     });
 
     it('returned matrix should be able to slice properly too', () => {
       const child = sut.getRange([ 1, 1 ]);
       const subchild = child.getRange([ 2, 2 ]);
-      assert.equal(subchild.get(0, 0), sut.get(3, 3));
+      expect(subchild.get(0, 0)).toBe(sut.get(3, 3));
     });
 
     it('should accept a size restriction', () => {
       const child = sut.getRange([ 1, 1 ], [ 2, 2 ]);
-      assert.deepEqual(child.shape, [ 2, 2 ]);
-      assert.isNull(child.get(2, 2));
+      expect(child.shape).toEqual([ 2, 2 ]);
+      expect(child.get(2, 2)).toBeNull();
     });
   });
 
@@ -160,16 +153,16 @@ describe('Matrix component', () => {
       const sut = makeVectorMatrix(data, dimensions);
       const array = sut.toArray();
 
-      assert.equal(array.length, size);
+      expect(array.length).toBe(size);
       for (const index of Vector.iterate(dimensions))
-        assert.include(array, sut.getVector(index));
+        expect(array).toContain(sut.getVector(index));
     });
 
 
     it('should return empty array if area has no tile', () => {
       const sut = makeMatrix([], [ 0, 0 ]);
       const array = sut.toArray();
-      assert.equal(array.length, 0);
+      expect(array.length).toBe(0);
     });
   });
 
@@ -179,8 +172,8 @@ describe('Matrix component', () => {
       const data = makeData(4);
       const sut = makeVectorMatrix(data, new Vector3D(2, 1, 2));
 
-      assert.isNull(sut.getVector(new Vector3D(0, 1, 0)));
-      assert.isNull(sut.getVector(new Vector3D(1, 1, 0)));
+      expect(sut.getVector(new Vector3D(0, 1, 0))).toBeNull();
+      expect(sut.getVector(new Vector3D(1, 1, 0))).toBeNull();
     });
 
 
@@ -188,7 +181,7 @@ describe('Matrix component', () => {
       const data = makeData(4);
       const sut = makeVectorMatrix(data, new Vector3D(2, 1, 2));
 
-      assert.throws(() => sut.setVector(null, new Vector3D(1, 1, 1)));
+      expect(() => sut.setVector(null, new Vector3D(1, 1, 1))).toThrow();
     });
   });
 
@@ -214,7 +207,7 @@ describe('Matrix component', () => {
     it(`should return the element index ${run.expectedIndex} if I ask for (${run.coords})`, () => {
       const expected = data[run.expectedIndex];
       const actual = sut.get(...run.coords);
-      assert.equal(actual, expected);
+      expect(actual).toBe(expected);
     });
   }
 
@@ -223,7 +216,7 @@ describe('Matrix component', () => {
       const newObject = {};
       sut.set(newObject, ...run.coords);
       const actual = data[run.expectedIndex];
-      assert.equal(actual, newObject);
+      expect(actual).toBe(newObject);
     });
   }
 
@@ -231,7 +224,7 @@ describe('Matrix component', () => {
     it(`should return the element index ${run.expectedIndex} if I ask for vector (${run.coords})`, () => {
       const expected = data[run.expectedIndex];
       const actual = vectorSut.getVector(run.vector);
-      assert.equal(actual, expected);
+      expect(actual).toBe(expected);
     });
   }
 
@@ -240,13 +233,13 @@ describe('Matrix component', () => {
       const newObject = {};
       vectorSut.setVector(newObject, run.vector);
       const actual = data[run.expectedIndex];
-      assert.equal(actual, newObject);
+      expect(actual).toBe(newObject);
     });
   }
 
   function testReturnsNull(reason: string, cases: number[][]) {
     it(`should return null for ${reason}`, () => {
-      cases.forEach(coords => assert.isNull(sut.get(...coords)));
+      cases.forEach(coords => expect(sut.get(...coords)).toBeNull());
     });
   }
 });

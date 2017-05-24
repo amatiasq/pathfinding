@@ -1,7 +1,5 @@
 // tslint:disable:max-line-length
 
-import { assert } from 'chai';
-import * as sinon from 'sinon';
 import { Vector3D } from '../core/vector3d';
 import { Area, NodeCreator } from './area';
 import { INode } from './node';
@@ -12,20 +10,20 @@ describe('Area class', () => {
 
 
   it('should invoke the callback given to the constructor for each node in the area', () => {
-    const spy = sinon.spy();
+    const spy = jest.fn();
     const dataSize = new Vector3D(2, 2, 2);
     const size = dataSize.z * dataSize.y * dataSize.x;
     makeArea(dataSize, spy);
-    assert.equal(spy.callCount, size);
+    expect(spy).toHaveBeenCalledTimes(size);
   });
 
 
   it('should return the node created by nodeCreator at the giving coordinates', () => {
     const sut = makeArea();
-    assert.deepPropertyVal(sut.get(new Vector3D(0, 0, 0)), 'index', 0);
-    assert.deepPropertyVal(sut.get(new Vector3D(1, 0, 0)), 'index', 1);
-    assert.deepPropertyVal(sut.get(new Vector3D(1, 1, 0)), 'index', 3);
-    assert.deepPropertyVal(sut.get(new Vector3D(1, 1, 1)), 'index', 7);
+    expect(sut.get(new Vector3D(0, 0, 0))).toHaveProperty('index', 0);
+    expect(sut.get(new Vector3D(1, 0, 0))).toHaveProperty('index', 1);
+    expect(sut.get(new Vector3D(1, 1, 0))).toHaveProperty('index', 3);
+    expect(sut.get(new Vector3D(1, 1, 1))).toHaveProperty('index', 7);
   });
 
 
@@ -94,8 +92,8 @@ describe('Area class', () => {
         operator(nodeA, nodeB, above);
       }
 
-      assert.equal(sut.areNeighbors(nodeA, nodeB), expected);
-      assert.equal(sut.areNeighbors(nodeB, nodeA), expected);
+      expect(sut.areNeighbors(nodeA, nodeB)).toEqual(expected);
+      expect(sut.areNeighbors(nodeB, nodeA)).toEqual(expected);
     }
   });
 
@@ -106,15 +104,15 @@ describe('Area class', () => {
       const node = sut.get(new Vector3D(2, 2, 0));
       const neighbors = sut.getNeighbors(node);
 
-      assert.equal(neighbors.length, 8);
-      assert.include(neighbors, sut.get(new Vector3D(1, 1, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(1, 2, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(1, 3, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(2, 1, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(2, 3, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(3, 1, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(3, 2, 0)));
-      assert.include(neighbors, sut.get(new Vector3D(3, 3, 0)));
+      expect(neighbors.length).toBe(8);
+      expect(neighbors).toContain(sut.get(new Vector3D(1, 1, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(1, 2, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(1, 3, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(2, 1, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(2, 3, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(3, 1, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(3, 2, 0)));
+      expect(neighbors).toContain(sut.get(new Vector3D(3, 3, 0)));
     });
 
 
@@ -122,7 +120,7 @@ describe('Area class', () => {
       const target = new Vector3D(1, 1, 0);
       const sut = makeArea(new Vector3D(3, 3, 1), obstacleCreator(location => location.is(target)));
       const neighbors = sut.getNeighbors(sut.get(target));
-      assert.equal(neighbors.length, 0);
+      expect(neighbors.length).toBe(0);
     });
 
 
@@ -132,8 +130,8 @@ describe('Area class', () => {
       const filter = obstacleCreator(location => !location.is(target) && !location.is(neighbor));
       const sut = makeArea(new Vector3D(3, 3, 1), filter);
       const neighbors = sut.getNeighbors(sut.get(target));
-      assert.equal(neighbors.length, 1);
-      assert.include(neighbors, sut.get(neighbor));
+      expect(neighbors.length).toBe(1);
+      expect(neighbors).toContain(sut.get(neighbor));
     });
 
 
@@ -147,8 +145,8 @@ describe('Area class', () => {
       sut.get(above).isEmpty = true;
       const neighbors = sut.getNeighbors(sut.get(target));
 
-      assert.equal(neighbors.length, 8);
-      assert(neighbors.every(node => node.location.z === 1));
+      expect(neighbors.length).toBe(8);
+      expect(neighbors.every(node => node.location.z === 1)).toBe(true);
     });
 
 
@@ -162,7 +160,7 @@ describe('Area class', () => {
       sut.get(below).canTravelUp = true;
       const neighbors = sut.getNeighbors(sut.get(target));
 
-      assert.include(neighbors, sut.get(below));
+      expect(neighbors).toContain(sut.get(below));
     });
 
 
@@ -171,8 +169,8 @@ describe('Area class', () => {
       const sut = makeArea(new Vector3D(1, 1, 1));
       const neighbors = sut.getNeighbors(sut.get(target));
 
-      assert.isArray(neighbors);
-      assert.equal(neighbors.length, 0);
+      expect(neighbors).toBeInstanceOf(Array);
+      expect(neighbors.length).toBe(0);
     });
 
 
@@ -185,7 +183,7 @@ describe('Area class', () => {
       sut.get(new Vector3D(0, 0, 1)).isEmpty = true;
       const neighbors = sut.getNeighbors(sut.get(target));
 
-      assert.include(neighbors, sut.get(below));
+      expect(neighbors).toContain(sut.get(below));
     });
 
 
@@ -196,8 +194,8 @@ describe('Area class', () => {
       sut.get(new Vector3D(0, 0, 1)).isEmpty = true;
       const neighbors = sut.getNeighbors(sut.get(target));
 
-      assert.isArray(neighbors);
-      assert.equal(neighbors.length, 0);
+      expect(neighbors).toBeInstanceOf(Array);
+      expect(neighbors.length).toBe(0);
     });
   });
 
@@ -206,8 +204,8 @@ describe('Area class', () => {
     it('should return a new Area', () => {
       const { sut, range } = makeRange(new Vector3D(5, 5, 5), new Vector3D(1, 1, 1));
 
-      assert.instanceOf(range, Area);
-      assert.notEqual(sut, range);
+      expect(range).toBeInstanceOf(Area);
+      expect(sut).not.toBe(range);
     });
 
 
@@ -215,32 +213,29 @@ describe('Area class', () => {
       const offset = new Vector3D(1, 1, 1);
       const { sut, range } = makeRange(new Vector3D(5, 5, 5), offset);
 
-      assert.equal(sut.get(offset), range.get(new Vector3D(0, 0, 0)));
-      assert.equal(sut.get(new Vector3D(1, 1, 2)), range.get(new Vector3D(0, 0, 1)));
-      assert.equal(sut.get(new Vector3D(1, 2, 1)), range.get(new Vector3D(0, 1, 0)));
-      assert.equal(sut.get(new Vector3D(2, 1, 1)), range.get(new Vector3D(1, 0, 0)));
+      expect(sut.get(offset)).toBe(range.get(new Vector3D(0, 0, 0)));
+      expect(sut.get(new Vector3D(1, 1, 2))).toBe(range.get(new Vector3D(0, 0, 1)));
+      expect(sut.get(new Vector3D(1, 2, 1))).toBe(range.get(new Vector3D(0, 1, 0)));
+      expect(sut.get(new Vector3D(2, 1, 1))).toBe(range.get(new Vector3D(1, 0, 0)));
     });
 
 
     it('should include to the last tile if no size is provided', () => {
       const { range, maxSize } = makeRange(new Vector3D(5, 5, 5), new Vector3D(1, 1, 1));
-
-      assert.deepEqual(range.size, maxSize);
+      expect(range.size).toEqual(maxSize);
     });
 
 
     it('should limit the results to the requested output size', () => {
       const requestedSize = new Vector3D(2, 2, 2);
       const { range } = makeRange(new Vector3D(5, 5, 5), new Vector3D(1, 1, 1), requestedSize);
-
-      assert.deepEqual(range.size, requestedSize);
+      expect(range.size).toEqual(requestedSize);
     });
 
 
     it('should return a list with every possible tile even if the Area is smaller than requested size', () => {
       const { range } = makeRange(new Vector3D(2, 2, 2), new Vector3D(1, 1, 1), new Vector3D(5, 5, 5));
-
-      assert.deepEqual(range.size, new Vector3D(1, 1, 1));
+      expect(range.size).toEqual(new Vector3D(1, 1, 1));
     });
 
 
@@ -259,17 +254,17 @@ describe('Area class', () => {
       const sut = makeArea(size);
       const array = sut.toArray();
 
-      assert.equal(array.length, size.x * size.y * size.z);
+      expect(array.length).toBe(size.x * size.y * size.z);
 
       for (const index of Vector3D.iterate(size))
-        assert.include(array, sut.get(index));
+        expect(array).toContain(sut.get(index));
     });
 
 
     it('should return empty array if area has no tile', () => {
       const sut = makeArea(new Vector3D(0, 0, 0));
       const array = sut.toArray();
-      assert.equal(array.length, 0);
+      expect(array.length).toBe(0);
     });
   });
 

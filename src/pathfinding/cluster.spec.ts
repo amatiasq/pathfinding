@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { Vector3D } from '../core/vector3d';
 import { Area } from './area';
 import { Cluster } from './cluster';
@@ -14,7 +13,8 @@ describe('Cluster class', () => {
 
 
   it('should not crash on creation', () => {
-    assert.doesNotThrow(() => makeCluster(new Vector3D(5, 5, 5), new Vector3D(3, 3, 3)));
+    expect(() => makeCluster(new Vector3D(5, 5, 5), new Vector3D(3, 3, 3)))
+      .not.toThrowError();
   });
 
 
@@ -23,7 +23,7 @@ describe('Cluster class', () => {
       const { sut, area } = makeCluster(new Vector3D(4, 4, 1), new Vector3D(2, 2, 1));
       const entrances = sut.getEntrances();
 
-      assert.deepEqual(entrances, [
+      expect(entrances).toEqual([
         area.get(new Vector3D(0, 0, 0)),
         area.get(new Vector3D(1, 0, 0)),
         area.get(new Vector3D(0, 1, 0)),
@@ -37,7 +37,7 @@ describe('Cluster class', () => {
       area.get(new Vector3D(0, 1, 0)).isObstacle = true;
       const entrances = sut.getEntrances();
 
-      assert.deepEqual(entrances, [
+      expect(entrances).toEqual([
         area.get(new Vector3D(1, 0, 0)),
         area.get(new Vector3D(1, 1, 0)),
       ]);
@@ -48,17 +48,17 @@ describe('Cluster class', () => {
       const { sut, area } = makeCluster(new Vector3D(5, 5, 1), new Vector3D(3, 3, 1));
       const entrances = sut.getEntrances();
 
-      assert.deepEqual(entrances, [
+      expect(entrances).toEqual([
         area.get(new Vector3D(0, 0, 0)),
         area.get(new Vector3D(2, 0, 0)),
         area.get(new Vector3D(0, 2, 0)),
         area.get(new Vector3D(2, 2, 0)),
       ]);
 
-      assert.notInclude(entrances, area.get(new Vector3D(0, 0, 1)));
-      assert.notInclude(entrances, area.get(new Vector3D(0, 1, 0)));
-      assert.notInclude(entrances, area.get(new Vector3D(1, 0, 0)));
-      assert.notInclude(entrances, area.get(new Vector3D(1, 1, 1)));
+      expect(entrances).not.toContain(area.get(new Vector3D(0, 0, 1)));
+      expect(entrances).not.toContain(area.get(new Vector3D(0, 1, 0)));
+      expect(entrances).not.toContain(area.get(new Vector3D(1, 0, 0)));
+      expect(entrances).not.toContain(area.get(new Vector3D(1, 1, 1)));
     });
   });
 
