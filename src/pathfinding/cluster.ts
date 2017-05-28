@@ -4,19 +4,17 @@ import { INode } from './node';
 import { IPathfindingAlgorithm } from './pathfinding';
 
 
-interface ICluster {
-  resolve(start: INode, end: INode): INode[];
-  getEntrances(): INode[];
-  getConnections(node: INode): Map<INode, INode[]>;
-}
-
-
 export class Cluster {
   constructor(
-    private readonly world: Area<INode>,
+    world: Area<INode>,
     public readonly area: Area<INode>,
     private readonly algorithm: IPathfindingAlgorithm<INode>,
   ) {}
+
+
+  resolve(start: INode, end: INode) {
+    return this.algorithm.resolve(start, end, this.area) || null;
+  }
 
 
   getEntrances(): INode[] {
@@ -34,6 +32,20 @@ export class Cluster {
     for (const entrance of entrances)
       if (result.indexOf(entrance) === -1)
         result.push(entrance);
+
+    return result;
+  }
+
+
+  getConnections(node: INode): Map<INode, INode[]> {
+    const entrances = this.getEntrances();
+    const result = new Map<INode, INode[]>();
+
+    for (const entrance of entrances) {
+      const path = this.algorithm.resolve(node, entrance, this.area);
+      if (path)
+        result.set(entrance, path);
+    }
 
     return result;
   }
@@ -69,6 +81,7 @@ export class Cluster {
     return face;
   }
 }
+
 
 enum Side {
   UP,

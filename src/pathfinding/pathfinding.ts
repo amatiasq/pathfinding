@@ -18,5 +18,5 @@ export class Pathfinding<T extends ITile> {
 
 
 export interface IPathfindingAlgorithm<T extends INode> {
-  resolve(origin: T, destination: T, area?: Area<T>): T[];
+  resolve(origin: T, destination: T, area: Area<T>): T[];
 }

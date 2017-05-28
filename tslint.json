@@ -85,7 +85,7 @@
     "eofline": true,
     "linebreak-style": [true, "LF"],
     "max-classes-per-file": [true, 3],
-    "max-file-line-count": [true, 300],
+    "max-file-line-count": [true, 500],
     "max-line-length": [true, 120],
     "no-default-export": true,
     "no-require-imports": true,

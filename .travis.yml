@@ -1,17 +1,11 @@
 language: node_js
-dist: trusty
-sudo: required
+
 node_js:
-  - "7"
+  - "stable"
 
-before_install:
- - export CHROME_BIN=/usr/bin/google-chrome
- - export DISPLAY=:99.0
- - sh -e /etc/init.d/xvfb start
+script:
+  - npm run lint
+  - npm run test-coverage
 
-addons:
-  apt:
-    sources:
-     - google-chrome
-    packages:
-     - google-chrome-stable
+after_script:
+ - npm run upload-coverage

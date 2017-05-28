@@ -1,32 +1,10 @@
 import { Vector3D } from '../core/vector3d';
 import { AStar } from './a-star';
+import { measurer } from './a-star.mock';
 import { Area } from './area';
 import { INode } from './node';
 import { Pathfinding } from './pathfinding';
 import { ITile } from './tile';
-
-
-const LAYER_CHANGE_COST = 2;
-const DIAGONAL_MOVEMENT_COST = Math.SQRT2;
-
-
-const measurer = {
-  estimateDistance(from: INode, to: INode) {
-    return from.location.sustract(to.location).magnitude;
-  },
-
-  getNeighborCost(from: INode, to: INode) {
-    const distance = from.location.sustract(to.location).apply(Math.abs);
-
-    if (distance.z === 1)
-      return LAYER_CHANGE_COST;
-
-    if (distance.y === 1 && distance.x === 1)
-      return DIAGONAL_MOVEMENT_COST;
-
-    return 1;
-  },
-};
 
 
 describe('Pathfinding module', () => {

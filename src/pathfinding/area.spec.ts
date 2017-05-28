@@ -237,14 +237,6 @@ describe('Area class', () => {
       const { range } = makeRange(new Vector3D(2, 2, 2), new Vector3D(1, 1, 1), new Vector3D(5, 5, 5));
       expect(range.size).toEqual(new Vector3D(1, 1, 1));
     });
-
-
-    function makeRange(worldSize: Vector3D, offset: Vector3D, size?: Vector3D) {
-      const sut = makeArea(worldSize);
-      const range = sut.getRange(offset, size);
-      const maxSize = worldSize.sustract(offset);
-      return { sut, range, maxSize };
-    }
   });
 
 
@@ -269,8 +261,49 @@ describe('Area class', () => {
   });
 
 
+  describe('#contains method', () => {
+    it('should return true if the node is inside the area', () => {
+      const { sut, range } = makeRange(new Vector3D(2, 2, 1), new Vector3D(1, 1, 0));
+      const inside = sut.get(new Vector3D(1, 1, 0));
+      expect(range.contains(inside)).toBe(true);
+    });
+
+
+    it('should return false if the node is outside the area', () => {
+      const { sut, range } = makeRange(new Vector3D(2, 2, 1), new Vector3D(1, 1, 0));
+      const outside = sut.get(new Vector3D(0, 0, 0));
+      expect(range.contains(outside)).toBe(false);
+    });
+  });
+
+
+  describe('- bug cases -', () => {
+    it('#getNeighbors should not return the node we are passing it even if it\'s a range', () => {
+      const { range } = makeRange(new Vector3D(2, 2, 1), new Vector3D(1, 1, 0));
+      const first = range.get(new Vector3D(0, 0, 0));
+      const neighbors = range.getNeighbors(first);
+      expect(neighbors).not.toContain(first);
+    });
+
+    it('#getNeighbors should return empty array if passed node it outside the area itself', () => {
+      const { sut, range } = makeRange(new Vector3D(2, 2, 1), new Vector3D(1, 1, 0));
+      const outside = sut.get(new Vector3D(0, 0, 0));
+      const neighbors = range.getNeighbors(outside);
+      expect(neighbors.length).toBe(0);
+    });
+  });
+
+
   function makeArea(dataSize = new Vector3D(2, 2, 2), nodeCreator = defaultNodeCreator) {
     return new Area<INode>(dataSize, nodeCreator);
+  }
+
+
+  function makeRange(worldSize: Vector3D, offset: Vector3D, size?: Vector3D) {
+    const sut = makeArea(worldSize);
+    const range = sut.getRange(offset, size);
+    const maxSize = worldSize.sustract(offset);
+    return { sut, range, maxSize };
   }
 
 

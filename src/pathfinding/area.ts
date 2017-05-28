@@ -29,8 +29,20 @@ export class Area<T extends INode> {
   }
 
 
+  private get offset() {
+    return this.tiles.get(0, 0, 0).location;
+  }
+
+
   get(location: Vector3D): T {
     return this.tiles.getVector(location);
+  }
+
+
+  contains(node: INode) {
+    const { offset, size } = this;
+    const max = size.add(offset);
+    return node.location.every((coord, key) => offset[key] <= coord && coord < max[key]);
   }
 
 
@@ -67,7 +79,7 @@ export class Area<T extends INode> {
 
 
   getNeighbors(node: T): T[] {
-    if (node.isObstacle)
+    if (node.isObstacle || !this.contains(node))
       return [];
 
     const layerNeighbors = this.getLayerNeighbors(node);
@@ -95,7 +107,7 @@ export class Area<T extends INode> {
 
   private getLayerNeighbors(node: T): T[] {
     const neighbors = [];
-    const location = node.location;
+    const location = node.location.sustract(this.offset);
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {

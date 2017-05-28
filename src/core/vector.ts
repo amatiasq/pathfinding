@@ -200,10 +200,10 @@ abstract class BaseVector<T extends IVector> implements IVector {
     return this.setValue(operation(this.x), operation(this.y));
   }
   every(operation: VectorTest): boolean {
-    return operation(this.x) && operation(this.y);
+    return operation(this.x, 'x', this) && operation(this.y, 'y', this);
   }
   some(operation: VectorTest): boolean {
-    return operation(this.x) || operation(this.y);
+    return operation(this.x, 'x', this) || operation(this.y, 'y', this);
   }
 
   abstract clone(): T;
@@ -296,4 +296,4 @@ interface IYSetter {
 }
 
 export type VectorSetter = IXSetter | IYSetter;
-export type VectorTest = (coord: number) => boolean;
+type VectorTest = (coord: number, key: 'x' | 'y', vector: IVector) => boolean;

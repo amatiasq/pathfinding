@@ -1,5 +1,5 @@
 import { round } from './helpers';
-import { IVector, VectorSetter, VectorTest } from './vector';
+import { IVector, VectorSetter } from './vector';
 
 
 export interface IVector3D extends IVector {
@@ -20,6 +20,8 @@ export interface IVector3D extends IVector {
   divideValue(x: number, y?: number, z?: number): IVector3D;
 
   apply(operation: (coord: number) => number): IVector3D;
+  every(operation: Vector3DTest): boolean;
+  some(operation: Vector3DTest): boolean;
 
   clone(): IVector3D;
   toImmutable(): IVector3D;
@@ -159,11 +161,11 @@ abstract class BaseVector3D<T extends IVector3D> implements IVector3D {
   apply(operation: (coord: number) => number): T {
     return this.setValue(operation(this.x), operation(this.y), operation(this.z));
   }
-  every(operation: VectorTest): boolean {
-    return operation(this.x) && operation(this.y) && operation(this.z);
+  every(operation: Vector3DTest): boolean {
+    return operation(this.x, 'x', this) && operation(this.y, 'y', this) && operation(this.z, 'z', this);
   }
-  some(operation: VectorTest): boolean {
-    return operation(this.x) || operation(this.y) || operation(this.z);
+  some(operation: Vector3DTest): boolean {
+    return operation(this.x, 'x', this) || operation(this.y, 'y', this) || operation(this.z, 'z', this);
   }
 
   abstract clone(): T;
@@ -232,3 +234,4 @@ interface IZSetter {
 }
 
 type Vector3DSetter = VectorSetter | IZSetter;
+type Vector3DTest = (coord: number, key: 'x' | 'y' | 'z', vector: IVector3D) => boolean;
